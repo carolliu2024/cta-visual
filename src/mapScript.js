@@ -132,6 +132,7 @@ d3.csv('ridership_with_locs-2.csv').then(data => {
     const aggregatedData = d3.nest()
     .key(d => d.station_id)
     .rollup(stationGroup => ({
+      station_name: stationGroup[0].stationame,
       totalRidership: d3.sum(stationGroup, d => +d.avg_weekday_rides),
       latitude: +stationGroup[0].latitude,
       longitude: +stationGroup[0].longitude,
@@ -197,10 +198,11 @@ d3.csv('ridership_with_locs-2.csv').then(data => {
           console.log("event: ",event);
           // console.log("d: ",d);
           const station = event.value.station_id; // Replace with the appropriate field from your data
+          const name = event.value.station_name;
           // console.log("station_id: ",station);
 
           // Call a function to update the plot based on the clicked station
-          updatePlot(data, station, year);
+          updatePlot(data, station, name, year);
         });
 
     // Update the year displayed by slider
@@ -261,7 +263,7 @@ function updateVisualization(aggregatedData, year, svg) {
 }
 
 // function to update plot, does not work
-function updatePlot(data, station, selectedYear) {
+function updatePlot(data, station, name, selectedYear) {
     // Filter data for the clicked station and selected year
     // console.log("data?: ",data, station);
     const stationData = data.filter(d => {
@@ -276,10 +278,16 @@ function updatePlot(data, station, selectedYear) {
     var rect = whiteBox.node().getBoundingClientRect(); // get its computed size
     // console.log(whiteBox);
     whiteBox.html(''); // Clear previous content
+
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   
     const xScale = d3.scaleLinear()
       .domain([1, 12])
       .range([0+5, rect.width-5]);
+
+    const xAxis = d3.axisBottom(xScale)
+      .tickValues([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
+      .tickFormat(month => monthNames[month - 1]);
   
     const yScale = d3.scaleLinear()
       .domain([0, d3.max(monthtotals)])
@@ -293,7 +301,7 @@ function updatePlot(data, station, selectedYear) {
     // Add x-axis
     svgPlot.append("g")
       .attr("transform", "translate(" +  0.2*rect.width +","+ rect.height*.9 + ")")
-      .call(d3.axisBottom(xScale));
+      .call(xAxis);
     // Add y-axis
     svgPlot.append("g")
       .attr("transform", "translate("+0.2*rect.width+",0)")
@@ -342,7 +350,7 @@ function updatePlot(data, station, selectedYear) {
     .attr('text-anchor', 'middle')
     .style('font-family', 'Helvetica')
     .style('font-size', 15)
-    .text('Monthly Ridership');
+    .text('Monthly Ridership for ' + name);
     
     // X label
     svgPlot.append('text')
