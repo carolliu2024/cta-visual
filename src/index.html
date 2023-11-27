@@ -6,9 +6,14 @@
     <title>CTA Ridership Visualization</title>
     <script src="https://d3js.org/d3.v5.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/d3-tile@1"></script>
+    <link rel="stylesheet" href="mapScript.css">
 </head>
 <body>
     <!-- Your map will go here -->
     <script src="mapScript.js"></script>
+    <div class="white-box" id="white-box"></div>
+    <label for="year-slider">Select Year:</label>
+    <input type="range" id="year-slider" min="2001" max="2023" step="1" value="2023">
+    <span id="selected-year">2023</span>
 </body>
 </html>

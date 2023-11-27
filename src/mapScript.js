@@ -1,8 +1,8 @@
 // mapScript.js
 
 // Define the size of the map
-const width = window.innerWidth-100; //1000;
-const height = window.innerHeight-100; //800;
+const width = window.innerWidth*0.9; //1000;
+const height = window.innerHeight*0.9; //800;
 var proj_scale = 60000;
 var projX = width/2;
 var projY = height/2;
@@ -124,6 +124,22 @@ function updateMap(newScale, newX, newY) {
 
 // Load your CSV data with ridership information
 d3.csv('ridership_with_locs-2.csv').then(data => {
+    // Add event listener for the slider
+    const slider = document.getElementById('year-slider');
+    const selectedYear = document.getElementById('selected-year');
+
+    // Convert month_beginning column to date objects
+    data.forEach(d => {
+        d.month_beginning = new Date(d.month_beginning);
+    });
+
+    // Update the year displayed by slider
+    slider.addEventListener('input', function() {
+        const year = this.value;
+        selectedYear.textContent = year;
+        // updateVisualization(data, +year);
+    });
+
     // Aggregate data by station
     const aggregatedData = d3.nest()
         .key(d => d.station_id)
@@ -166,8 +182,53 @@ d3.csv('ridership_with_locs-2.csv').then(data => {
         .style('fill', d => colorScale(d.value.totalRidership))
         .style('opacity', 0.7) // Adjust the circle opacity
         .style('stroke', 'black') // Set a black stroke color for debugging
-        .style('stroke-width', 1); // Set a stroke width for debugging
+        .style('stroke-width', 1) // Set a stroke width for debugging
+        .on('click', function (event, d) {
+            const station = d.station_id; // Replace with the appropriate field from your data
+        
+            // Call a function to update the plot based on the clicked station
+            updatePlot(data, station, selectedYear);
+        })
 
 });
 
+// function to update plot, does not work
+function updatePlot(data, station, selectedYear) {
+    // Filter data for the clicked station and selected year
+    const stationData = data.filter(d => {
+        return d.station_id == station && d.month_beginning.getFullYear() == selectedYear;
+    });
 
+    // Extract necessary information for plotting, from filtered data
+    const months = stationData.map(d => d.month_beginning.getMonth() + 1); // 1-indexed months
+    const monthtotals = stationData.map(d => d.monthtotal);
+
+    const whiteBox = d3.select('#white-box'); // Assuming the white box has an ID 'white-box'
+    whiteBox.html(''); // Clear previous content
+  
+    const xScale = d3.scaleTime()
+      .domain([1, 12])
+      .range([0, whiteBox.width]);
+  
+    const yScale = d3.scaleLinear()
+      .domain([0, d3.max(monthtotals)])
+      .range([0, whiteBox.height]);
+  
+    // const line = d3.line()
+    //   .x(d => xScale(d))
+    //   .y(d => yScale(d));
+    const line = d3.line()
+      .x(months)
+      .y(monthtotals);
+  
+    const svg = whiteBox.append('svg')
+      .attr('width', whiteBox.width)
+      .attr('height', whiteBox.width);
+  
+    svg.append('path')
+      .datum(months)
+      .attr('fill', 'none')
+      .attr('stroke', 'steelblue')
+      .attr('stroke-width', 1.5)
+      .attr('d', line);
+}
