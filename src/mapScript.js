@@ -1,8 +1,8 @@
 // mapScript.js
 
 // Define the size of the map
-const width = 1000;
-const height = 800;
+const width = window.innerWidth-100; //1000;
+const height = window.innerHeight-100; //800;
 var proj_scale = 60000;
 var projX = width/2;
 var projY = height/2;
@@ -11,6 +11,8 @@ var projY = height/2;
 const svg = d3.select('body').append('svg')
     .attr('width', width)
     .attr('height', height);
+
+// const g = svg.append("g");
 
 // Define a projection (you can experiment with different projections)
 const projection = d3.geoMercator()
@@ -21,7 +23,7 @@ const projection = d3.geoMercator()
 // Set up the tile generator
 var tile = d3.tile()
   .size([width, height])
-  .scale(projection.scale()* 2 * Math.PI) // * 2 * Math.PI
+  .scale(proj_scale* 2 * Math.PI) // * 2 * Math.PI
   .translate(projection([0, 0]))
 
 // Generate tiles
@@ -30,7 +32,7 @@ var tiles = tile();
 // Assuming you have a function 'url' for generating tile URLs
 function url(x, y, z) {
   // Return tile URL
-  // return `https://tile.openstreetmap.org/${z}/${x}/${y}.png`;
+//   return `https://tile.openstreetmap.org/${z}/${x}/${y}.png`;
   return `https://tiles.stadiamaps.com/tiles/stamen_toner_lite/${z}/${x}/${y}.png`
 }
 
@@ -40,28 +42,28 @@ function zoomIn() {
   const newTransform = d3.event.transform;
   // Update the map tiles and circles based on the new projection
 
-  svg.selectAll('circle')
-    .attr('cx', d => {
-      // Calculate the new x position relative to the original position
-      const originalX = projection([d.value.longitude, d.value.latitude])[0];
-      return originalX + d3.event.transform.x;
-    })
-    .attr('cy', d => {
-      // Calculate the new y position relative to the original position
-      const originalY = projection([d.value.longitude, d.value.latitude])[1];
-      return originalY + d3.event.transform.y;
-    });
+//   svg.selectAll('circle')
+//     .attr('cx', d => {
+//       // Calculate the new x position relative to the original position
+//       const originalX = projection([d.value.longitude, d.value.latitude])[0];
+//       return originalX + d3.event.transform.x;
+//     })
+//     .attr('cy', d => {
+//       // Calculate the new y position relative to the original position
+//       const originalY = projection([d.value.longitude, d.value.latitude])[1];
+//       return originalY + d3.event.transform.y;
+//     });
 
   // scale/translate current projection
+  var newScale = proj_scale*newTransform.k;
+
   projection
     .center([-87.6298, 41.8781]) // Adjusted center for the Chicagoland region
-    .scale(proj_scale*newTransform.k) // Zoom in on Chicagoland region
-    .translate([projX, projY]);
-    // .scale(newTransform.k * (60000 / 2 / Math.PI))
-    // .translate([newTransform.x, newTransform.y]);
+    .scale(newScale) // Zoom in on Chicagoland region
+    .translate([projX + newTransform.x, projY + newTransform.y]);
 
   // Update the map tiles and circles based on the new projection
-  updateMap();
+  updateMap(newScale, newTransform.x, newTransform.y);
 }
 
 const zoom = d3.zoom()
@@ -73,7 +75,12 @@ const zoom = d3.zoom()
 svg.call(zoom);
 
 // Function to update map tiles and circles
-function updateMap() {
+function updateMap(newScale, newX, newY) {
+    // Set up the tile generator
+    tile = d3.tile()
+        .size([width, height])
+        .scale(newScale* 2 * Math.PI) // * 2 * Math.PI
+        .translate(projection([0, 0]))
     tiles = tile(); // Regenerate tiles based on the updated projection
     // Update map tiles
     svg.selectAll('image')
@@ -93,11 +100,13 @@ function updateMap() {
         .attr('height', tiles.scale),
         exit => exit.remove()
     );
-  
+
+    // document.body.appendChild(svg.node());
     // Update circles based on the updated projection
-    // svg.selectAll('circle')
-    //   .attr('cx', d => projection([d.value.longitude, d.value.latitude])[0])
-    //   .attr('cy', d => projection([d.value.longitude, d.value.latitude])[1]);
+    svg.selectAll('circle')
+      .attr('cx', d => projection([d.value.longitude, d.value.latitude])[0])
+      .attr('cy', d => projection([d.value.longitude, d.value.latitude])[1]);
+
 }
 
 // Create a path generator
@@ -134,7 +143,7 @@ d3.csv('ridership_with_locs-2.csv').then(data => {
     const colorScale = d3.scaleSequential(d3.interpolateBlues)
         .domain([0, d3.max(aggregatedData, d => d.value.totalRidership)]);
 
-    // Append image elements for each map tile
+    // CREATE MAP IN DESIRED AESTHETIC
     svg.selectAll('image')
         .data(tiles)
         .enter().append('image')
@@ -159,7 +168,6 @@ d3.csv('ridership_with_locs-2.csv').then(data => {
         .style('stroke', 'black') // Set a black stroke color for debugging
         .style('stroke-width', 1); // Set a stroke width for debugging
 
-    // updateMap();
 });
 
 
