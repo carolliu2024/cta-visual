@@ -127,6 +127,7 @@ d3.csv('ridership_with_locs-2.csv').then(data => {
     // Add event listener for the slider
     const slider = document.getElementById('year-slider');
     const selectedYear = document.getElementById('selected-year');
+    var year = 2023;
 
     // Convert month_beginning column to date objects
     data.forEach(d => {
@@ -135,29 +136,45 @@ d3.csv('ridership_with_locs-2.csv').then(data => {
 
     // Update the year displayed by slider
     slider.addEventListener('input', function() {
-        const year = this.value;
+        year = this.value;
         selectedYear.textContent = year;
         // updateVisualization(data, +year);
     });
 
     // Aggregate data by station
     const aggregatedData = d3.nest()
-        .key(d => d.station_id)
-        .rollup(group => ({
-            totalRidership: d3.sum(group, d => +d.avg_weekday_rides),
-            latitude: +group[0].latitude,
-            longitude: +group[0].longitude
+    .key(d => d.station_id)
+    .rollup(stationGroup => ({
+      totalRidership: d3.sum(stationGroup, d => +d.avg_weekday_rides),
+      latitude: +stationGroup[0].latitude,
+      longitude: +stationGroup[0].longitude,
+      station_id: +stationGroup[0].station_id,
+      years: d3.nest() // Calculates total ridership per year
+        .key(d => d.month_beginning.getFullYear())
+        .rollup(yearGroup => ({
+          yearlyTotal: d3.sum(yearGroup, d => +d.monthtotal),
         }))
-        .entries(data);
+        .entries(stationGroup),
+    }))
+    .entries(data);
+
+    console.log("aggData: ",aggregatedData);
+
+    // Find the highest yearly total, across all stations (only during that year)
+    const yearlyTotalsForYear = aggregatedData
+                                .map(station => ({
+                                  yearlyTotal: station.value.years.find(yr => yr.key == year)?.value.yearlyTotal || 0,
+                                }));
+    const highestYearlyTotal = d3.max(yearlyTotalsForYear, d => d.yearlyTotal);
 
     // Scale for circle size based on total ridership
     const sizeScale = d3.scaleSqrt()
-        .domain([0, d3.max(aggregatedData, d => d.value.totalRidership)])
+        .domain([0, highestYearlyTotal])
         .range([2, 20]); // Adjust the range for desired circle sizes
 
     // Color scale for fill color based on total ridership
     const colorScale = d3.scaleSequential(d3.interpolateBlues)
-        .domain([0, d3.max(aggregatedData, d => d.value.totalRidership)]);
+        .domain([0, highestYearlyTotal]);
 
     // CREATE MAP IN DESIRED AESTHETIC
     svg.selectAll('image')
@@ -178,23 +195,90 @@ d3.csv('ridership_with_locs-2.csv').then(data => {
         .enter().append('circle')
         .attr('cx', d => projection([d.value.longitude, d.value.latitude])[0])
         .attr('cy', d => projection([d.value.longitude, d.value.latitude])[1])
-        .attr('r', d => sizeScale(d.value.totalRidership))
-        .style('fill', d => colorScale(d.value.totalRidership))
+        .attr('r', d => {const yearlyTotal = d.value.years.find(yr => yr.key == year).value.yearlyTotal;
+                         return sizeScale(yearlyTotal);
+                        })
+        .style('fill', d => {const yearlyTotal = d.value.years.find(yr => yr.key == year).value.yearlyTotal;
+                             return colorScale(yearlyTotal);
+                            })
         .style('opacity', 0.7) // Adjust the circle opacity
         .style('stroke', 'black') // Set a black stroke color for debugging
         .style('stroke-width', 1) // Set a stroke width for debugging
-        .on('click', function (event, d) {
-            const station = d.station_id; // Replace with the appropriate field from your data
-        
-            // Call a function to update the plot based on the clicked station
-            updatePlot(data, station, selectedYear);
-        })
+       
+    // Update the year displayed by slider
+    slider.addEventListener('input', function () {
+      // selectedYear.textContent = year;
+      console.log(year);
+      updateVisualization(aggregatedData, +year, svg);
+    });    
+
+    svg.selectAll('circle')
+      // .data(data)
+      .on('click', function (event, d) {
+        const station = d.station_id; // Replace with the appropriate field from your data
+        // console.log("station_id: ",station);
+        console.log("d: ",d);
+    
+        // Call a function to update the plot based on the clicked station
+        // console.log("data?: ",data);
+        updatePlot(data, station, year);
+      });
 
 });
+
+// Function to update the visualization based on the selected year
+function updateVisualization(aggregatedData, year, svg) {
+  // Extract yearly totals for the target year from each station
+  const yearlyTotalsForYear = aggregatedData
+    .map(station => ({
+      yearlyTotal: station.value.years.find(yr => yr.key == year)?.value.yearlyTotal || 0,
+    }));
+  const highestYearlyTotal = d3.max(yearlyTotalsForYear, d => d.yearlyTotal);
+
+  // Scale for circle size based on total ridership
+  const sizeScale = d3.scaleSqrt()
+  .domain([0, highestYearlyTotal])
+  .range([2, 20]); // Adjust the range for desired circle sizes
+
+  // Color scale for fill color based on total ridership
+  const colorScale = d3.scaleSequential(d3.interpolateBlues)
+  .domain([0, highestYearlyTotal]);
+
+  // Map the aggregated data to the stations on the map
+  svg.selectAll('circle')
+      .data(aggregatedData)
+      .join(
+          enter => enter.append('circle')
+              .attr('cx', d => projection([d.value.longitude, d.value.latitude])[0])
+              .attr('cy', d => projection([d.value.longitude, d.value.latitude])[1])
+              .attr('r', d => {
+                  const yearlyTotal = d.value.years.find(yr => yr.key == year)?.value.yearlyTotal || 0;
+                  return sizeScale(yearlyTotal);
+              })
+              .style('fill', d => {
+                  const yearlyTotal = d.value.years.find(yr => yr.key == year)?.value.yearlyTotal || 0;
+                  return colorScale(yearlyTotal);
+              })
+              .style('opacity', 0.7)
+              .style('stroke', 'black')
+              .style('stroke-width', 1),
+          update => update
+              .attr('r', d => {
+                  const yearlyTotal = d.value.years.find(yr => yr.key == year)?.value.yearlyTotal || 0;
+                  return sizeScale(yearlyTotal);
+              })
+              .style('fill', d => {
+                  const yearlyTotal = d.value.years.find(yr => yr.key == year)?.value.yearlyTotal || 0;
+                  return colorScale(yearlyTotal);
+              }),
+          exit => exit.remove()
+      );
+}
 
 // function to update plot, does not work
 function updatePlot(data, station, selectedYear) {
     // Filter data for the clicked station and selected year
+    // console.log("data?: ",data, station);
     const stationData = data.filter(d => {
         return d.station_id == station && d.month_beginning.getFullYear() == selectedYear;
     });
@@ -204,31 +288,67 @@ function updatePlot(data, station, selectedYear) {
     const monthtotals = stationData.map(d => d.monthtotal);
 
     const whiteBox = d3.select('#white-box'); // Assuming the white box has an ID 'white-box'
+    var rect = whiteBox.node().getBoundingClientRect(); // get its computed size
+    // console.log(whiteBox);
     whiteBox.html(''); // Clear previous content
   
-    const xScale = d3.scaleTime()
+    const xScale = d3.scaleLinear()
       .domain([1, 12])
-      .range([0, whiteBox.width]);
+      .range([0, rect.width]);
   
     const yScale = d3.scaleLinear()
       .domain([0, d3.max(monthtotals)])
-      .range([0, whiteBox.height]);
-  
+      .range([rect.height, 0]);
+
     // const line = d3.line()
     //   .x(d => xScale(d))
     //   .y(d => yScale(d));
     const line = d3.line()
       .x(months)
       .y(monthtotals);
-  
-    const svg = whiteBox.append('svg')
+
+    // Make SVG container
+    const svgPlot = whiteBox.append('svg')
       .attr('width', whiteBox.width)
       .attr('height', whiteBox.width);
-  
-    svg.append('path')
-      .datum(months)
-      .attr('fill', 'none')
-      .attr('stroke', 'steelblue')
-      .attr('stroke-width', 1.5)
-      .attr('d', line);
+    
+    // Add x-axis
+    svgPlot.append("g")
+      // .attr("transform", "translate(0," + height + ")")
+      .call(d3.axisBottom(xScale));
+    // Add y-axis
+    svgPlot.append("g")
+      .call(d3.axisLeft(yScale)); 
+
+    svgPlot.append('g')
+      .selectAll("dot")
+      .data(stationData)
+      .enter()
+      .append("circle")
+      .attr("cx", (d) => {const m = d.month_beginning.getMonth() + 1;
+                          xScale(m);
+                         } 
+        )
+      .attr("cy", (d) => {const monthTot = d.monthtotal;
+                          yScale(monthTot);
+                         } )
+      .attr("r", 2)
+
+    // svgPlot.append('g')
+    //   .selectAll("dot")
+    //   .data(months.map((d, i) => [d, monthtotals[i]]))
+    //   .enter()
+    //   .append("circle")
+    //   .attr("cx", (d) => xScale(d[0]) )
+    //   .attr("cy", (d) => yScale(d[1]) )
+    //   .attr("r", 2)
+      // .attr("transform", "translate(" + 100 + "," + 100 + ")")
+      // .style("fill", "#CC0000");
+
+    // svgPlot.append('path')
+    //   .datum(months)
+    //   .attr('fill', 'none')
+    //   .attr('stroke', 'steelblue')
+    //   .attr('stroke-width', 1.5)
+    //   .attr('d', line);
 }
