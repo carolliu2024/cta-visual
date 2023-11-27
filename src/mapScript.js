@@ -40,19 +40,6 @@ function url(x, y, z) {
 function zoomIn() {
   // handle scaling, translating
   const newTransform = d3.event.transform;
-  // Update the map tiles and circles based on the new projection
-
-//   svg.selectAll('circle')
-//     .attr('cx', d => {
-//       // Calculate the new x position relative to the original position
-//       const originalX = projection([d.value.longitude, d.value.latitude])[0];
-//       return originalX + d3.event.transform.x;
-//     })
-//     .attr('cy', d => {
-//       // Calculate the new y position relative to the original position
-//       const originalY = projection([d.value.longitude, d.value.latitude])[1];
-//       return originalY + d3.event.transform.y;
-//     });
 
   // scale/translate current projection
   var newScale = proj_scale*newTransform.k;
@@ -158,7 +145,7 @@ d3.csv('ridership_with_locs-2.csv').then(data => {
     }))
     .entries(data);
 
-    console.log("aggData: ",aggregatedData);
+    // console.log("aggData: ",aggregatedData);
 
     // Find the highest yearly total, across all stations (only during that year)
     const yearlyTotalsForYear = aggregatedData
@@ -193,35 +180,33 @@ d3.csv('ridership_with_locs-2.csv').then(data => {
     svg.selectAll('circle')
         .data(aggregatedData)
         .enter().append('circle')
+        .attr("class", "circle")
         .attr('cx', d => projection([d.value.longitude, d.value.latitude])[0])
         .attr('cy', d => projection([d.value.longitude, d.value.latitude])[1])
         .attr('r', d => {const yearlyTotal = d.value.years.find(yr => yr.key == year).value.yearlyTotal;
                          return sizeScale(yearlyTotal);
                         })
         .style('fill', d => {const yearlyTotal = d.value.years.find(yr => yr.key == year).value.yearlyTotal;
+                              // console.log("d: ",d);
                              return colorScale(yearlyTotal);
                             })
         .style('opacity', 0.7) // Adjust the circle opacity
         .style('stroke', 'black') // Set a black stroke color for debugging
-        .style('stroke-width', 1) // Set a stroke width for debugging
-       
+        .style('stroke-width', 1)// Set a stroke width for debugging
+        .on('click', (event, d) => {
+          console.log("event: ",event);
+          // console.log("d: ",d);
+          const station = event.value.station_id; // Replace with the appropriate field from your data
+          // console.log("station_id: ",station);
+
+          // Call a function to update the plot based on the clicked station
+          updatePlot(data, station, year);
+        });
+
     // Update the year displayed by slider
     slider.addEventListener('input', function () {
-      // selectedYear.textContent = year;
-      console.log(year);
       updateVisualization(aggregatedData, +year, svg);
     });    
-
-    svg.selectAll('circle')
-      // .data(data)
-      .on('click', function (event, d) {
-        const station = d.station_id; // Replace with the appropriate field from your data
-        // console.log("station_id: ",station);
-        console.log("d: ",d);
-    
-        // Call a function to update the plot based on the clicked station
-        updatePlot(data, station, year);
-      });
 
 });
 
@@ -248,6 +233,7 @@ function updateVisualization(aggregatedData, year, svg) {
       .data(aggregatedData)
       .join(
           enter => enter.append('circle')
+              .attr('class', 'circle')
               .attr('cx', d => projection([d.value.longitude, d.value.latitude])[0])
               .attr('cy', d => projection([d.value.longitude, d.value.latitude])[1])
               .attr('r', d => {
@@ -293,30 +279,24 @@ function updatePlot(data, station, selectedYear) {
   
     const xScale = d3.scaleLinear()
       .domain([1, 12])
-      .range([0, rect.width]);
+      .range([0+5, rect.width-5]);
   
     const yScale = d3.scaleLinear()
       .domain([0, d3.max(monthtotals)])
-      .range([rect.height, 0]);
-
-    // const line = d3.line()
-    //   .x(d => xScale(d))
-    //   .y(d => yScale(d));
-    const line = d3.line()
-      .x(months)
-      .y(monthtotals);
+      .range([rect.height-25, 0+30]);
 
     // Make SVG container
     const svgPlot = whiteBox.append('svg')
-      .attr('width', whiteBox.width)
-      .attr('height', whiteBox.width);
+      .attr('width', rect.width)
+      .attr('height', rect.height);
     
     // Add x-axis
     svgPlot.append("g")
-      // .attr("transform", "translate(0," + height + ")")
+      .attr("transform", "translate(" +  0.2*rect.width +","+ rect.height*.9 + ")")
       .call(d3.axisBottom(xScale));
     // Add y-axis
     svgPlot.append("g")
+      .attr("transform", "translate("+0.2*rect.width+",0)")
       .call(d3.axisLeft(yScale)); 
 
     svgPlot.append('g')
@@ -325,29 +305,60 @@ function updatePlot(data, station, selectedYear) {
       .enter()
       .append("circle")
       .attr("cx", (d) => {const m = d.month_beginning.getMonth() + 1;
+                          console.log("Month: ",m)
+                          console.log("MonthScaled: ", xScale(m));
                           return xScale(m);
                          } 
         )
       .attr("cy", (d) => {const monthTot = d.monthtotal;
+                          // console.log(yScale(monthTot));
                           return yScale(monthTot);
                          } )
-      .attr("r", 2)
+      .attr("transform", "translate("+0.2*rect.width+",0)")
+      .style('fill','red')
+      .attr("r", 2);
 
-    // svgPlot.append('g')
-    //   .selectAll("dot")
-    //   .data(months.map((d, i) => [d, monthtotals[i]]))
-    //   .enter()
-    //   .append("circle")
-    //   .attr("cx", (d) => xScale(d[0]) )
-    //   .attr("cy", (d) => yScale(d[1]) )
-    //   .attr("r", 2)
-      // .attr("transform", "translate(" + 100 + "," + 100 + ")")
-      // .style("fill", "#CC0000");
+    var line = d3.line()
+      .x(function(d) { const m = d.month_beginning.getMonth() + 1;
+                       return xScale(m); }) 
+      .y(function(d) { const monthTot = d.monthtotal;
+                          return yScale(monthTot); }) 
+      .curve(d3.curveMonotoneX);
+      
+    svgPlot.append("path")
+      .datum(stationData) 
+      .attr("class", "line") 
+      .attr("transform", "translate("+0.2*rect.width+",0)")
+      .attr("d", line)
+      .style("fill", "none")
+      .style("stroke", "#CC0000")
+      .style("stroke-width", "2");
 
-    // svgPlot.append('path')
-    //   .datum(months)
-    //   .attr('fill', 'none')
-    //   .attr('stroke', 'steelblue')
-    //   .attr('stroke-width', 1.5)
-    //   .attr('d', line);
+
+    // Title
+    svgPlot.append('text')
+    .attr('x', rect.width/2)
+    .attr('y', 20)
+    .attr('text-anchor', 'middle')
+    .style('font-family', 'Helvetica')
+    .style('font-size', 15)
+    .text('Monthly Ridership');
+    
+    // X label
+    svgPlot.append('text')
+    .attr('x', rect.width/2)
+    .attr('y', rect.height)
+    .attr('text-anchor', 'middle')
+    .attr('transform', 'translate(0,' + -rect.height*.02 + ')')
+    .style('font-family', 'Helvetica')
+    .style('font-size', 12)
+    .text('Month');
+    
+    // Y label
+    svgPlot.append('text')
+    .attr('text-anchor', 'middle')
+    .attr('transform', 'translate('+ 0.05*rect.width + "," + rect.height/2 + ')rotate(-90)')
+    .style('font-family', 'Helvetica')
+    .style('font-size', 12)
+    .text('Ridership');
 }
