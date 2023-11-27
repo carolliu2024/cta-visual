@@ -11,11 +11,16 @@
 <body>
     <!-- Your map will go here -->
     <script src="mapScript.js"></script>
-    <div class="white-box" id="white-box">
+    <div class="box-container">
         <label for="year-slider">Select Year:</label>
         <input type="range" id="year-slider" min="2001" max="2023" step="1" value="2023">
         <span id="selected-year">2023</span>
+
+        <!-- SVG for plot goes in here -->
+        <div class="white-box" id="white-box"></div> 
+        
     </div>
+    
     
 </body>
 </html>

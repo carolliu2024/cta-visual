@@ -220,7 +220,6 @@ d3.csv('ridership_with_locs-2.csv').then(data => {
         console.log("d: ",d);
     
         // Call a function to update the plot based on the clicked station
-        // console.log("data?: ",data);
         updatePlot(data, station, year);
       });
 
@@ -326,11 +325,11 @@ function updatePlot(data, station, selectedYear) {
       .enter()
       .append("circle")
       .attr("cx", (d) => {const m = d.month_beginning.getMonth() + 1;
-                          xScale(m);
+                          return xScale(m);
                          } 
         )
       .attr("cy", (d) => {const monthTot = d.monthtotal;
-                          yScale(monthTot);
+                          return yScale(monthTot);
                          } )
       .attr("r", 2)
 

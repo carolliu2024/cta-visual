@@ -1,7 +1,13 @@
-.white-box {
+.box-container{
     position: fixed;
     top: 5vh;
     right: 10vw;
+    z-index: 1;
+}
+.white-box {
+    position: relative;
+    /* top: 5vh;
+    right: 10vw; */
     height: 50vh; /* Full height of the viewport */
     width: 25vw; /* Adjust the width as needed */
     background-color: rgba(255, 255, 255, 0.7); /* White with 0.7 opacity */
@@ -9,4 +15,5 @@
     border-style: solid;
     border-width: 2px;
     border-radius: 5%;
+    z-index: 2;
 }
