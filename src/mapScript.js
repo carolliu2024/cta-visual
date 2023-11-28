@@ -1,9 +1,9 @@
 // mapScript.js
 
 // Define the size of the map
-const width = window.innerWidth*0.9; //1000;
-const height = window.innerHeight*0.9; //800;
-var proj_scale = 60000;
+const width = window.innerWidth;
+const height = window.innerHeight; 
+var proj_scale = 800000;
 var projX = width/2;
 var projY = height/2;
 
@@ -16,7 +16,7 @@ const svg = d3.select('body').append('svg')
 
 // Define a projection (you can experiment with different projections)
 const projection = d3.geoMercator()
-    .center([-87.6298, 41.8781]) // Adjusted center for the Chicagoland region
+    .center([-87.6251, 41.8786]) // Adjusted center for the Chicagoland region
     .scale(proj_scale) // Zoom in on Chicagoland region
     .translate([projX, projY]);
 
@@ -158,7 +158,7 @@ d3.csv('ridership_with_locs-2.csv').then(data => {
     // Scale for circle size based on total ridership
     const sizeScale = d3.scaleSqrt()
         .domain([0, highestYearlyTotal])
-        .range([2, 20]); // Adjust the range for desired circle sizes
+        .range([2, 10]); // Adjust the range for desired circle sizes
 
     // Color scale for fill color based on total ridership
     const colorScale = d3.scaleSequential(d3.interpolateBlues)
@@ -271,13 +271,13 @@ function updatePlot(data, station, name, selectedYear) {
     });
 
     // Extract necessary information for plotting, from filtered data
-    const months = stationData.map(d => d.month_beginning.getMonth() + 1); // 1-indexed months
+    // const months = stationData.map(d => d.month_beginning.getMonth() + 1); // 1-indexed months
     const monthtotals = stationData.map(d => d.monthtotal);
 
-    const whiteBox = d3.select('#white-box'); // Assuming the white box has an ID 'white-box'
-    var rect = whiteBox.node().getBoundingClientRect(); // get its computed size
-    // console.log(whiteBox);
-    whiteBox.html(''); // Clear previous content
+    const plotBox = d3.select('#plot-box'); // Assuming the white box has an ID 'white-box'
+    var rect = plotBox.node().getBoundingClientRect(); // get its computed size
+    console.log(plotBox);
+    plotBox.html(''); // Clear previous content
 
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   
@@ -294,7 +294,7 @@ function updatePlot(data, station, name, selectedYear) {
       .range([rect.height-25, 0+30]);
 
     // Make SVG container
-    const svgPlot = whiteBox.append('svg')
+    const svgPlot = plotBox.append('svg')
       .attr('width', rect.width)
       .attr('height', rect.height);
     
@@ -348,7 +348,6 @@ function updatePlot(data, station, name, selectedYear) {
     .attr('x', rect.width/2)
     .attr('y', 20)
     .attr('text-anchor', 'middle')
-    .style('font-family', 'Helvetica')
     .style('font-size', 15)
     .text('Monthly Ridership for ' + name);
     
@@ -358,7 +357,6 @@ function updatePlot(data, station, name, selectedYear) {
     .attr('y', rect.height)
     .attr('text-anchor', 'middle')
     .attr('transform', 'translate(0,' + -rect.height*.02 + ')')
-    .style('font-family', 'Helvetica')
     .style('font-size', 12)
     .text('Month');
     
@@ -366,7 +364,60 @@ function updatePlot(data, station, name, selectedYear) {
     svgPlot.append('text')
     .attr('text-anchor', 'middle')
     .attr('transform', 'translate('+ 0.05*rect.width + "," + rect.height/2 + ')rotate(-90)')
-    .style('font-family', 'Helvetica')
     .style('font-size', 12)
     .text('Ridership');
+
+    // Update the title in the white-box
+    const whiteBoxTitle = document.getElementById('white-box').querySelector('h2');
+    whiteBoxTitle.textContent = `CTA Ridership - ${name}`;
+
+    console.log('station:', station)
+
+    // Find the row corresponding to the selected station
+    const stationInfo = data.find(d => d.station_id.toString() === station.toString());
+
+    // Check if the stationInfo is found
+    if (!stationInfo) {
+        console.error('Station information not found for station_id:', station);
+        return;
+    }
+
+    // Extract the lines from the station information
+    const lines = Object.keys(stationInfo)
+        .filter(key => key !== 'station_id' && key !== 'stationame' && key !== 'month_beginning' && key !== 'Location' && key !== 'latitude' && key !== 'longitude')
+        .filter(key => stationInfo[key].toString().toLowerCase() === 'true');
+
+    // Now you have the lines associated with the station
+    console.log('Lines for station:', lines);
+
+    // Create a <p> element for tags
+    const tagsContainer = d3.select('#white-box').selectAll('.tags-container').data([1]); // Use data to create only one container
+    const tagsContainerEnter = tagsContainer.enter().append('p').attr('class', 'tags-container');
+
+    // Append <span> elements for each line
+    const tags = tagsContainer.merge(tagsContainerEnter).selectAll('.tag').data(lines);
+    tags.exit().remove(); // Remove any existing tags that are not needed
+    tags.enter().append('span').attr('class', 'tag').text(d => d)
+        .style('background-color', d => getBackgroundColor(d)) // Apply background color based on line name
+        .style('border', '1px solid black') // Apply a border
+        .style('border-radius', '5px'); // Apply border radius
+}
+
+// Function to get background color based on line name
+function getBackgroundColor(lineName) {
+    // Define colors for each line name
+    const colorMap = {
+        'red': 'red',
+        'blue': 'blue',
+        'g': 'green',
+        'brn': 'brown',
+        'p': 'purple',
+        'pexp': 'purple',
+        'y': 'yellow',
+        'pnk': 'pink',
+        'o': 'orange'
+    };
+
+    // Return the color for the given line name
+    return colorMap[lineName.toLowerCase()] || 'lightgray'; // Default to gray if color not found
 }

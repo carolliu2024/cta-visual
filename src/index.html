@@ -6,18 +6,38 @@
     <title>CTA Ridership Visualization</title>
     <script src="https://d3js.org/d3.v5.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/d3-tile@1"></script>
+
+    <!-- Importing Inter Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="mapScript.css">
 </head>
 <body>
     <!-- Your map will go here -->
     <script src="mapScript.js"></script>
     <div class="box-container">
-        <label for="year-slider">Select Year:</label>
-        <input type="range" id="year-slider" min="2001" max="2023" step="1" value="2023">
-        <span id="selected-year">2023</span>
+        <label for="year-slider">
+            Select Year:
+        </label>
+        <input type="range" 
+                id="year-slider" 
+                min="2001" 
+                max="2023" 
+                step="1" 
+                value="2023">
+        <span id="selected-year">
+            2023
+        </span>
 
         <!-- SVG for plot goes in here -->
-        <div class="white-box" id="white-box"></div> 
+        <div class="white-box" id="white-box">
+            <h2>CTA Ridership</h2>
+            <p>hi</p>
+            <div class="plot-box" id="plot-box">
+
+            </div>
+        </div> 
         
     </div>
     

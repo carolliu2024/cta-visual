@@ -1,22 +1,35 @@
+* {
+    font-family: 'Inter', sans-serif;
+}
+
 .box-container{
     position: fixed;
     top: 5vh;
-    right: 10vw;
+    right: 2vw;
     z-index: 1;
 }
+
 .white-box {
-    position: relative;
-    margin: 1vh;
-    /* top: 5vh;
-    right: 10vw; */
-    height: 55vh;
+    height: 75vh;
     width: 35vw; /* Adjust the width as needed */
     background-color: rgba(255, 255, 255, 0.7); /* White with 0.7 opacity */
+    justify-content: center;
+    border-radius: 5%;
     border-color: grey;
     border-style: solid;
     border-width: 2px;
-    border-radius: 5%;
+    margin: 1vh;
+    padding: 0 1vw 0 1vw;
+}
+
+.plot-box {
+    /* width: 30vw; /* Set a fixed width */
+    height: 50vh; /* Set a fixed height */
+    position: relative;
+    margin: 1vh;
+    background-color: white;
     z-index: 2;
     display: flex;
     justify-content: center;
+    border-radius: 5%;
 }
