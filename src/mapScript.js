@@ -203,6 +203,9 @@ d3.csv('ridership_with_locs-2.csv').then(data => {
 
           // Call a function to update the plot based on the clicked station
           updatePlot(data, station, name, year);
+
+          // Create colored line tags
+          createLineTags(data, station, name);
         });
 
     // Update the year displayed by slider
@@ -370,37 +373,45 @@ function updatePlot(data, station, name, selectedYear) {
     // Update the title in the white-box
     const whiteBoxTitle = document.getElementById('white-box').querySelector('h2');
     whiteBoxTitle.textContent = `CTA Ridership - ${name}`;
+}
 
-    console.log('station:', station)
+function createLineTags(data, station, name) {
+  // Find the row corresponding to the selected station
+  const stationInfo = data.find(d => d.station_id.toString() === station.toString());
 
-    // Find the row corresponding to the selected station
-    const stationInfo = data.find(d => d.station_id.toString() === station.toString());
+  if (!stationInfo) {
+      console.error('Station information not found for station_id:', station);
+      return;
+  }
 
-    // Check if the stationInfo is found
-    if (!stationInfo) {
-        console.error('Station information not found for station_id:', station);
-        return;
-    }
+  // Extract unique lines from the station information
+  const linesSet = new Set(Object.keys(stationInfo)
+  .filter(key => key !== 'station_id' && key !== 'stationame' && key !== 'month_beginning' && key !== 'Location' && key !== 'latitude' && key !== 'longitude')
+  .filter(key => stationInfo[key].toString().toLowerCase() === 'true')
+  );
 
-    // Extract the lines from the station information
-    const lines = Object.keys(stationInfo)
-        .filter(key => key !== 'station_id' && key !== 'stationame' && key !== 'month_beginning' && key !== 'Location' && key !== 'latitude' && key !== 'longitude')
-        .filter(key => stationInfo[key].toString().toLowerCase() === 'true');
+  // Convert the Set back to an array
+  const lines = Array.from(linesSet);
 
-    // Now you have the lines associated with the station
-    console.log('Lines for station:', lines);
+  // Select or create the tagsContainer
+  let tagsContainer = d3.select('#white-box').select('.tags-container');
+  
+  // If the container doesn't exist, create it
+  if (tagsContainer.empty()) {
+      tagsContainer = d3.select('#white-box').append('p').attr('class', 'tags-container');
+  }
 
-    // Create a <p> element for tags
-    const tagsContainer = d3.select('#white-box').selectAll('.tags-container').data([1]); // Use data to create only one container
-    const tagsContainerEnter = tagsContainer.enter().append('p').attr('class', 'tags-container');
+  // Clear existing tags
+  tagsContainer.selectAll('.tag').remove();
 
-    // Append <span> elements for each line
-    const tags = tagsContainer.merge(tagsContainerEnter).selectAll('.tag').data(lines);
-    tags.exit().remove(); // Remove any existing tags that are not needed
-    tags.enter().append('span').attr('class', 'tag').text(d => d)
-        .style('background-color', d => getBackgroundColor(d)) // Apply background color based on line name
-        .style('border', '1px solid black') // Apply a border
-        .style('border-radius', '5px'); // Apply border radius
+  // Append <span> elements for each line
+  const tags = tagsContainer.selectAll('.tag').data(lines);
+  tags.enter().append('span').attr('class', 'tag').text(d => d)
+      .style('background-color', d => getBackgroundColor(d)) // Apply background color based on line name
+      .style('color', 'white')
+      .style('border-radius', '5px')
+      .style('padding', '2px')
+      .style('margin-right', '2px');
 }
 
 // Function to get background color based on line name
