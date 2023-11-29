@@ -205,7 +205,7 @@ d3.csv('ridership_with_locs-2.csv').then(data => {
           updatePlot(data, station, name, year);
 
           // Create colored line tags
-          createLineTags(data, station, name);
+          createLineTags(data, station);
         });
 
     // Update the year displayed by slider
@@ -375,7 +375,8 @@ function updatePlot(data, station, name, selectedYear) {
     whiteBoxTitle.textContent = `CTA Ridership - ${name}`;
 }
 
-function createLineTags(data, station, name) {
+// Returns array of unique stations
+function getUniqueLines(data, station) {
   // Find the row corresponding to the selected station
   const stationInfo = data.find(d => d.station_id.toString() === station.toString());
 
@@ -391,7 +392,12 @@ function createLineTags(data, station, name) {
   );
 
   // Convert the Set back to an array
-  const lines = Array.from(linesSet);
+  return Array.from(linesSet);
+}
+
+function createLineTags(data, station) {
+  // Convert the Set back to an array
+  const lines = getUniqueLines(data, station);
 
   // Select or create the tagsContainer
   let tagsContainer = d3.select('#white-box').select('.tags-container');
