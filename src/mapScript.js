@@ -93,7 +93,6 @@ function updateMap(newScale, newX, newY) {
     svg.selectAll('circle')
       .attr('cx', d => projection([d.value.longitude, d.value.latitude])[0])
       .attr('cy', d => projection([d.value.longitude, d.value.latitude])[1]);
-
 }
 
 // Create a path generator
@@ -324,10 +323,12 @@ function updateVisualization(aggregatedData, year, svg) {
 // function to update plot, does not work
 function updatePlot(data, station, name, selectedYear) {
     // Filter data for the clicked station and selected year
-    // console.log("data?: ",data, station);
     const stationData = data.filter(d => {
-        return d.station_id == station && d.month_beginning.getFullYear() == selectedYear;
-    });
+      return d.station_id == station && d.month_beginning.getFullYear() == selectedYear;
+  });
+
+  // Sort stationData based on month_beginning
+  stationData.sort((a, b) => a.month_beginning - b.month_beginning);
 
     // Extract necessary information for plotting, from filtered data
     // const months = stationData.map(d => d.month_beginning.getMonth() + 1); // 1-indexed months
@@ -342,15 +343,15 @@ function updatePlot(data, station, name, selectedYear) {
   
     const xScale = d3.scaleLinear()
       .domain([1, 12])
-      .range([0+5, rect.width-5]);
+      .range([0, rect.width - 10]);
 
     const xAxis = d3.axisBottom(xScale)
       .tickValues([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
       .tickFormat(month => monthNames[month - 1]);
-  
-    const yScale = d3.scaleLinear()
+
+      const yScale = d3.scaleLinear()
       .domain([0, d3.max(monthtotals)])
-      .range([rect.height-25, 0+30]);
+      .range([rect.height - 25, 0 + 30]);
 
     // Make SVG container
     const svgPlot = plotBox.append('svg')
@@ -359,12 +360,18 @@ function updatePlot(data, station, name, selectedYear) {
     
     // Add x-axis
     svgPlot.append("g")
-      .attr("transform", "translate(" +  0.2*rect.width +","+ rect.height*.9 + ")")
-      .call(xAxis);
+    .attr("transform", "translate(" + 20 + "," + (rect.height - 50) + ")")
+    .call(xAxis)
+    .selectAll("text") // Select all x-axis text elements
+    .style("text-anchor", "end") // Set text-anchor to "end"
+    .attr("dx", "-.8em") // Adjust x position
+    .attr("dy", ".15em") // Adjust y position
+    .attr("transform", "rotate(-45)"); // Rotate the text
+    
     // Add y-axis
     svgPlot.append("g")
-      .attr("transform", "translate("+0.2*rect.width+",0)")
-      .call(d3.axisLeft(yScale)); 
+    .attr("transform", "translate(" + (0.1 * rect.width) + ",0)") // Adjust the x translation
+    .call(d3.axisLeft(yScale));
 
     svgPlot.append('g')
       .selectAll("dot")
@@ -386,21 +393,24 @@ function updatePlot(data, station, name, selectedYear) {
       .attr("r", 2);
 
     var line = d3.line()
-      .x(function(d) { const m = d.month_beginning.getMonth() + 1;
-                       return xScale(m); }) 
-      .y(function(d) { const monthTot = d.monthtotal;
-                          return yScale(monthTot); }) 
-      .curve(d3.curveMonotoneX);
-      
-    svgPlot.append("path")
-      .datum(stationData) 
-      .attr("class", "line") 
-      .attr("transform", "translate("+0.2*rect.width+",0)")
-      .attr("d", line)
-      .style("fill", "none")
-      .style("stroke", "#CC0000")
-      .style("stroke-width", "2");
+        .x(function(d) {
+            const m = d.month_beginning.getMonth() + 1;
+            return xScale(m);
+        })
+        .y(function(d) {
+            const monthTot = d.monthtotal;
+            return yScale(monthTot);
+        })
+        .curve(d3.curveMonotoneX);
 
+    svgPlot.append("path")
+        .datum(stationData)
+        .attr("class", "line")
+        .attr("transform", "translate(" + 0.2 * rect.width + ",0)")
+        .attr("d", line)
+        .style("fill", "none")
+        .style("stroke", "#CC0000")
+        .style("stroke-width", "1");
 
     // Title
     svgPlot.append('text')
@@ -427,8 +437,8 @@ function updatePlot(data, station, name, selectedYear) {
     .text('Ridership');
 
     // Update the title in the white-box
-    const whiteBoxTitle = document.getElementById('white-box').querySelector('h2');
-    whiteBoxTitle.textContent = `CTA Ridership - ${name}`;
+    const headerBoxTitle = document.getElementById('header-box').querySelector('h2');
+    headerBoxTitle.textContent = `CTA Ridership - ${name}`;
 }
 
 // Returns array of unique stations
@@ -456,11 +466,11 @@ function createLineTags(data, station) {
   const lines = getUniqueLines(data, station);
 
   // Select or create the tagsContainer
-  let tagsContainer = d3.select('#white-box').select('.tags-container');
+  let tagsContainer = d3.select('#header-box').select('.tags-container');
   
   // If the container doesn't exist, create it
   if (tagsContainer.empty()) {
-      tagsContainer = d3.select('#white-box').append('p').attr('class', 'tags-container');
+      tagsContainer = d3.select('#header-box').append('p').attr('class', 'tags-container');
   }
 
   // Clear existing tags
@@ -472,8 +482,8 @@ function createLineTags(data, station) {
       .style('background-color', d => getBackgroundColor(d)) // Apply background color based on line name
       .style('color', 'white')
       .style('border-radius', '5px')
-      .style('padding', '2px')
-      .style('margin-right', '2px');
+      .style('padding', '5px')
+      .style('margin-right', '5px');
 }
 
 // Function to get background color based on line name

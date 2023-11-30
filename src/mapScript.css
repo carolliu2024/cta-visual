@@ -9,27 +9,43 @@
     z-index: 1;
 }
 
-.white-box {
-    height: 75vh;
+.header-box {
+    height: auto;
     width: 35vw; /* Adjust the width as needed */
-    background-color: rgba(255, 255, 255, 0.7); /* White with 0.7 opacity */
-    justify-content: center;
-    border-radius: 5%;
+    background-color: rgba(255, 255, 255, 0.8); /* White with 0.7 opacity */
+    justify-content: flex-start;
+    border-radius: 5px;
     border-color: grey;
     border-style: solid;
-    border-width: 2px;
+    border-width: 1px;
+    margin: 1vh;
+    padding: 0 1vw 1vw 1vw;
+    display: flex;
+    flex-direction: column;
+}
+
+.body-box {
+    width: 35vw;
+    height: 70vh;
     margin: 1vh;
     padding: 0 1vw 0 1vw;
+    border-radius: 5px;
+    background-color: rgba(255, 255, 255, 0.8);
+    border-color: grey;
+    border-style: solid;
+    border-width: 1px;
+    display: flex;
+    flex-direction: column;
 }
 
 .plot-box {
-    /* width: 30vw; /* Set a fixed width */
-    height: 50vh; /* Set a fixed height */
+    width: 35vw; /* Set a fixed width */
+    height: 30vh; /* Set a fixed height */
     position: relative;
     margin: 1vh;
     background-color: white;
     z-index: 2;
     display: flex;
     justify-content: center;
-    border-radius: 5%;
+    border-radius: 5px;
 }
