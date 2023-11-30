@@ -160,10 +160,6 @@ d3.csv('ridership_with_locs-2.csv').then(data => {
         .domain([0, highestYearlyTotal])
         .range([2, 10]); // Adjust the range for desired circle sizes
 
-    // Color scale for fill color based on total ridership
-    const colorScale = d3.scaleSequential(d3.interpolateBlues)
-        .domain([0, highestYearlyTotal]);
-
     // CREATE MAP IN DESIRED AESTHETIC
     svg.selectAll('image')
         .data(tiles)
@@ -177,6 +173,7 @@ d3.csv('ridership_with_locs-2.csv').then(data => {
     // Example of using the map in the document
     document.body.appendChild(svg.node());
 
+    const defs = svg.append('defs');
     // Map the aggregated data to the stations on the map
     svg.selectAll('circle')
         .data(aggregatedData)
@@ -187,13 +184,44 @@ d3.csv('ridership_with_locs-2.csv').then(data => {
         .attr('r', d => {const yearlyTotal = d.value.years.find(yr => yr.key == year).value.yearlyTotal;
                          return sizeScale(yearlyTotal);
                         })
-        .style('fill', d => {const yearlyTotal = d.value.years.find(yr => yr.key == year).value.yearlyTotal;
-                              // console.log("d: ",d);
-                             return colorScale(yearlyTotal);
-                            })
-        .style('opacity', 0.7) // Adjust the circle opacity
-        .style('stroke', 'black') // Set a black stroke color for debugging
-        .style('stroke-width', 1)// Set a stroke width for debugging
+                        .style('stroke', 'black')
+                        .style('stroke-width', 1)
+                        .style('fill', d => {
+                          const linesForYear = getUniqueLines(data, d.value.station_id)
+                              .map(line => getBackgroundColor(line));
+                      
+                          // Generate a unique ID for the gradient
+                          const gradientId = `gradient-${d.value.station_id}`;
+                          
+                          // Create a linear gradient
+                          const linearGradient = defs
+                              .append('linearGradient')
+                              .attr('id', gradientId)
+                              .attr('gradientTransform', 'rotate(0)'); // Rotate the gradient if needed
+                          
+                          // Add stops for each color with hard stops
+                          linesForYear.forEach((color, i) => {
+                              linearGradient.append('stop')
+                                  .attr('offset', `${i * (100 / linesForYear.length)}%`)
+                                  .style('stop-color', color);
+                              
+                              if (i < linesForYear.length - 1) {
+                                  // Add hard stops between colors
+                                  const midOffset = (i + 0.5) / (linesForYear.length - 1) * 100;
+                                  linearGradient.append('stop')
+                                      .attr('offset', `${midOffset}%`)
+                                      .style('stop-color', color)
+                                      .style('stop-opacity', 1); // Make the hard stop transparent
+                              }
+                          });
+                      
+                          // Use the gradient in the circle fill
+                          return `url(#${gradientId})`;
+                      })
+                      
+                      
+                      
+        .style('opacity', 1) // Adjust the circle opacity
         .on('click', (event, d) => {
           console.log("event: ",event);
           // console.log("d: ",d);
@@ -249,18 +277,46 @@ function updateVisualization(aggregatedData, year, svg) {
                   const yearlyTotal = d.value.years.find(yr => yr.key == year)?.value.yearlyTotal || 0;
                   return colorScale(yearlyTotal);
               })
-              .style('opacity', 0.7)
-              .style('stroke', 'black')
-              .style('stroke-width', 1),
+              .style('opacity', 0.7),
           update => update
               .attr('r', d => {
                   const yearlyTotal = d.value.years.find(yr => yr.key == year)?.value.yearlyTotal || 0;
                   return sizeScale(yearlyTotal);
               })
+              .style('stroke', 'black')
+                        .style('stroke-width', 1)
               .style('fill', d => {
-                  const yearlyTotal = d.value.years.find(yr => yr.key == year)?.value.yearlyTotal || 0;
-                  return colorScale(yearlyTotal);
-              }),
+                const linesForYear = getUniqueLines(data, d.value.station_id)
+                    .map(line => getBackgroundColor(line));
+            
+                // Generate a unique ID for the gradient
+                const gradientId = `gradient-${d.value.station_id}`;
+                
+                // Create a linear gradient
+                const linearGradient = defs
+                    .append('linearGradient')
+                    .attr('id', gradientId)
+                    .attr('gradientTransform', 'rotate(0)'); // Rotate the gradient if needed
+                
+                // Add stops for each color with hard stops
+                linesForYear.forEach((color, i) => {
+                    linearGradient.append('stop')
+                        .attr('offset', `${i * (100 / linesForYear.length)}%`)
+                        .style('stop-color', color);
+                    
+                    if (i < linesForYear.length - 1) {
+                        // Add hard stops between colors
+                        const midOffset = (i + 0.5) / (linesForYear.length - 1) * 100;
+                        linearGradient.append('stop')
+                            .attr('offset', `${midOffset}%`)
+                            .style('stop-color', color)
+                            .style('stop-opacity', 1); // Make the hard stop transparent
+                    }
+                });
+            
+                // Use the gradient in the circle fill
+                return `url(#${gradientId})`;
+            }),
           exit => exit.remove()
       );
 }
@@ -412,7 +468,7 @@ function createLineTags(data, station) {
 
   // Append <span> elements for each line
   const tags = tagsContainer.selectAll('.tag').data(lines);
-  tags.enter().append('span').attr('class', 'tag').text(d => d)
+  tags.enter().append('span').attr('class', 'tag').text(d => getTrainName(d))
       .style('background-color', d => getBackgroundColor(d)) // Apply background color based on line name
       .style('color', 'white')
       .style('border-radius', '5px')
@@ -424,17 +480,34 @@ function createLineTags(data, station) {
 function getBackgroundColor(lineName) {
     // Define colors for each line name
     const colorMap = {
-        'red': 'red',
-        'blue': 'blue',
-        'g': 'green',
-        'brn': 'brown',
-        'p': 'purple',
-        'pexp': 'purple',
-        'y': 'yellow',
-        'pnk': 'pink',
-        'o': 'orange'
+        'red': '#c60c30',
+        'blue': '#00a1de',
+        'g': '#009b3a',
+        'brn': '#62361b',
+        'p': '#522398',
+        'pexp': '#522398',
+        'y': '#f9e300',
+        'pnk': '#e27ea6',
+        'o': '#f9461c'
     };
 
     // Return the color for the given line name
     return colorMap[lineName.toLowerCase()] || 'lightgray'; // Default to gray if color not found
+}
+
+function getTrainName(colorAbbr) {
+  // colorAbbr to actual color name
+  const trainColorMap = {
+      'red': 'Red',
+      'blue': 'Blue',
+      'g': 'Green',
+      'brn': 'Brown',
+      'p': 'Purple',
+      'pexp': 'PurpleExpress',
+      'y': 'Yellow',
+      'pnk': 'Pink',
+      'o': 'Orange'
+  }
+
+  return trainColorMap[colorAbbr.toLowerCase()] || 'lightgray';
 }
