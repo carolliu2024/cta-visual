@@ -29,7 +29,7 @@
 } */
 
 .body-box {
-    width: 40vw;
+    width: 35vw;
     height: 70vh;
     margin: 1vh;
     padding: 0 1vw 0 1vw;
@@ -45,8 +45,10 @@
 }
 
 .plot-box {
-    width: 40vw;
-    height: 70vh;
+    /* width: 35vw;
+    height: 70vh; */
+    width: 100%;
+    height: 100%;
     position: relative;
     margin: 1vh;
     background-color: white;
@@ -62,6 +64,10 @@
     display: flex;
     justify-content: space-between;
     padding: 1%;
+}
+
+.selected span{
+  font-weight: bold;
 }
 
 .range-slider {
@@ -84,32 +90,32 @@
     position: relative;
   }
   
-  .two-ranges input {
-    position: absolute;
-    width: 100%;
-    height: 5px;
-    top: -7px;
-    background: none;
-    pointer-events: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-  }
-  .two-ranges input::-webkit-slider-thumb {
-    height: 20px;
-    width: 20px;
-    border-radius: 50%;
-    border: 3px solid #1b53c0;
-    background-color: #fff;
-    pointer-events: auto;
-    -webkit-appearance: none;
-  }
+.two-ranges input {
+  position: absolute;
+  width: 100%;
+  height: 5px;
+  top: -7px;
+  background: none;
+  pointer-events: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+.two-ranges input::-webkit-slider-thumb {
+  height: 20px;
+  width: 20px;
+  border-radius: 50%;
+  border: 3px solid #1b53c0;
+  background-color: #fff;
+  pointer-events: auto;
+  -webkit-appearance: none;
+}
 
-  .two-ranges input::-moz-range-thumb {
-    height: 15px;
-    width: 15px;
-    border-radius: 50%;
-    border: 3px solid #1b53c0;
-    background-color: #fff;
-    pointer-events: auto;
-    -moz-appearance: none;
-  }
+.two-ranges input::-moz-range-thumb {
+  height: 15px;
+  width: 15px;
+  border-radius: 50%;
+  border: 3px solid #1b53c0;
+  background-color: #fff;
+  pointer-events: auto;
+  -moz-appearance: none;
+}
