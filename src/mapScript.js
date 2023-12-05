@@ -39,10 +39,14 @@ function url(x, y, z) {
 // IMPLEMENT ZOOMING/DRAGGING
 function zoomIn() {
   // handle scaling, translating
+  // const [cursorX, cursorY] = d3.mouse(this);
+  // console.log("Mouse Coords: ", [cursorX, cursorY])
+
   const newTransform = d3.event.transform;
 
   // scale/translate current projection
   var newScale = proj_scale*newTransform.k;
+  // const newCenter = projection.invert([cursorX, cursorY]);
 
   projection
     .center([-87.6298, 41.8781]) // Adjusted center for the Chicagoland region
@@ -114,6 +118,10 @@ d3.csv('ridership_with_locs-2.csv').then(data => {
     const slider = document.getElementById('year-slider');
     const selectedYear = document.getElementById('selected-year');
     var year = 2023;
+    var startYear = 2022;
+    var endYear = 2023;
+    var station;
+    var station_name;
 
     // Convert month_beginning column to date objects
     data.forEach(d => {
@@ -126,6 +134,34 @@ d3.csv('ridership_with_locs-2.csv').then(data => {
         selectedYear.textContent = year;
         // updateVisualization(data, +year);
     });
+
+    // START OF DOUBLE SLIDER CODE
+
+    // Code for double slider
+    const range = document.querySelector(".range-selected");
+    // const range = document.getElementById("range-selected");
+    const rangeInput = document.querySelectorAll(".two-ranges input"); // Get both ranges
+    const min = document.getElementById("selected-min");
+    const max = document.getElementById("selected-max");
+
+    rangeInput.forEach((input) => {
+      input.addEventListener("input", (e) => {
+        startYear = parseInt(rangeInput[0].value);
+        endYear = parseInt(rangeInput[1].value);
+
+        min.textContent = startYear;
+        max.textContent = endYear;
+        range.style.left = (startYear - 2001+0.5)/23 * 100 + "%";
+        console.log((startYear - 2001) * 100 + "%");
+        range.style.right = (2023 - endYear)/23 * 100 + "%";
+        if (station) {
+          console.log("running?");
+          updatePlot(data, station, station_name, startYear, endYear);
+        }
+      });
+
+    });
+    // END OF DOUBLE SLIDER CODE
 
     // Aggregate data by station
     const aggregatedData = d3.nest()
@@ -217,19 +253,15 @@ d3.csv('ridership_with_locs-2.csv').then(data => {
                           // Use the gradient in the circle fill
                           return `url(#${gradientId})`;
                       })
-                      
-                      
-                      
+       
         .style('opacity', 1) // Adjust the circle opacity
         .on('click', (event, d) => {
           console.log("event: ",event);
-          // console.log("d: ",d);
-          const station = event.value.station_id; // Replace with the appropriate field from your data
-          const name = event.value.station_name;
-          // console.log("station_id: ",station);
+          station = event.value.station_id; // Replace with the appropriate field from your data
+          station_name = event.value.station_name;
 
           // Call a function to update the plot based on the clicked station
-          updatePlot(data, station, name, year);
+          updatePlot(data, station, station_name, startYear, endYear);
 
           // Create colored line tags
           createLineTags(data, station);
@@ -238,7 +270,7 @@ d3.csv('ridership_with_locs-2.csv').then(data => {
     // Update the year displayed by slider
     slider.addEventListener('input', function () {
       updateVisualization(aggregatedData, +year, svg);
-    });    
+    });
 
 });
 
@@ -321,11 +353,15 @@ function updateVisualization(aggregatedData, year, svg) {
 }
 
 // function to update plot, does not work
-function updatePlot(data, station, name, selectedYear) {
-    // Filter data for the clicked station and selected year
-    const stationData = data.filter(d => {
-      return d.station_id == station && d.month_beginning.getFullYear() == selectedYear;
+function updatePlot(data, station, name, startYear, endYear) {
+  // Want to display multiple years' worth of month data
+
+  // Filter data for the clicked station and selected year
+  const stationData = data.filter(d => {
+    const dataYear = d.month_beginning.getFullYear();
+    return d.station_id == station && dataYear >= startYear && dataYear <= endYear;
   });
+  console.log("stationData:", stationData);
 
   // Sort stationData based on month_beginning
   stationData.sort((a, b) => a.month_beginning - b.month_beginning);
@@ -334,20 +370,26 @@ function updatePlot(data, station, name, selectedYear) {
     // const months = stationData.map(d => d.month_beginning.getMonth() + 1); // 1-indexed months
     const monthtotals = stationData.map(d => d.monthtotal);
 
-    const plotBox = d3.select('#plot-box'); // Assuming the white box has an ID 'white-box'
+    const plotBox = d3.select('#plot-box');
     var rect = plotBox.node().getBoundingClientRect(); // get its computed size
     console.log(plotBox);
     plotBox.html(''); // Clear previous content
 
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const yearRange = d3.range(startYear, endYear+1); // [startYear, ..., endYear]
+    const totalMonths = 12 * (endYear - startYear + 1);
   
     const xScale = d3.scaleLinear()
-      .domain([1, 12])
-      .range([0, rect.width - 10]);
+      .domain([1, totalMonths]) // .domain([1, 12])
+      .range([0, rect.width*0.85]);
 
     const xAxis = d3.axisBottom(xScale)
-      .tickValues([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
-      .tickFormat(month => monthNames[month - 1]);
+      .tickValues(d3.range(1, totalMonths + 1, Math.ceil(totalMonths / 10))) // 10 --> about 10 tick marks
+      .tickFormat(month => { 
+        const yr = yearRange[Math.floor((month - 1) / 12)]; // Calculate the year
+        const monthInYear = (month - 1) % 12; // Calculate the month within the year
+        return `${monthNames[monthInYear]} ${yr}`;
+      });
 
       const yScale = d3.scaleLinear()
       .domain([0, d3.max(monthtotals)])
@@ -360,7 +402,7 @@ function updatePlot(data, station, name, selectedYear) {
     
     // Add x-axis
     svgPlot.append("g")
-    .attr("transform", "translate(" + 20 + "," + (rect.height - 50) + ")")
+    .attr("transform", "translate(" + rect.width/10 + "," + (rect.height/1.15) + ")")
     .call(xAxis)
     .selectAll("text") // Select all x-axis text elements
     .style("text-anchor", "end") // Set text-anchor to "end"
@@ -373,29 +415,33 @@ function updatePlot(data, station, name, selectedYear) {
     .attr("transform", "translate(" + (0.1 * rect.width) + ",0)") // Adjust the x translation
     .call(d3.axisLeft(yScale));
 
+    // Plot the points on the graph in the box
     svgPlot.append('g')
       .selectAll("dot")
       .data(stationData)
       .enter()
       .append("circle")
       .attr("cx", (d) => {const m = d.month_beginning.getMonth() + 1;
-                          console.log("Month: ",m)
-                          console.log("MonthScaled: ", xScale(m));
-                          return xScale(m);
+                          // month_in_range: e.g. month 35, 36, 37... of all the months we plot
+                          const month_in_range = 12*(d.month_beginning.getFullYear() - startYear) + m; 
+                          // console.log("Month: ",month_in_range);
+                          // console.log("MonthScaled: ", xScale(month_in_range));
+                          return xScale(month_in_range);
                          } 
         )
       .attr("cy", (d) => {const monthTot = d.monthtotal;
                           // console.log(yScale(monthTot));
                           return yScale(monthTot);
                          } )
-      .attr("transform", "translate("+0.2*rect.width+",0)")
+      .attr("transform", "translate("+rect.width/10+",0)")
       .style('fill','red')
       .attr("r", 2);
 
     var line = d3.line()
         .x(function(d) {
             const m = d.month_beginning.getMonth() + 1;
-            return xScale(m);
+            const month_in_range = 12*(d.month_beginning.getFullYear() - startYear) + m;
+            return xScale(month_in_range);
         })
         .y(function(d) {
             const monthTot = d.monthtotal;
@@ -406,7 +452,7 @@ function updatePlot(data, station, name, selectedYear) {
     svgPlot.append("path")
         .datum(stationData)
         .attr("class", "line")
-        .attr("transform", "translate(" + 0.2 * rect.width + ",0)")
+        .attr("transform", "translate(" + rect.width/10 + ",0)")
         .attr("d", line)
         .style("fill", "none")
         .style("stroke", "#CC0000")

@@ -26,9 +26,28 @@
                 max="2023" 
                 step="1" 
                 value="2023">
-        <span id="selected-year">
-            2023
-        </span>
+        <span id="selected-year">2023</span>
+
+        <div class="range">
+            
+
+            <div class="range-slider">
+              <span class="range-selected" id = "range-selected"></span>
+            </div>
+            
+            <div class="two-ranges" id="two-ranges">
+              <input type="range" class="min" min="2001" max="2023" value="2022" step="1">
+              <input type="range" class="max" min="2001" max="2023" value="2023" step="1">
+            </div>
+
+            <div class = "selected">
+                <span id="selected-min">2022</span>
+                <span id="selected-max">2023</span>
+            </div>
+            
+
+            
+        </div> 
 
         <!-- SVG for plot goes in here -->
         <div class="header-box" id="header-box">
