@@ -151,11 +151,13 @@ d3.csv('ridership_with_locs-2.csv').then(data => {
 
         min.textContent = startYear;
         max.textContent = endYear;
+
+        // Everything between the sliders is filled blue
         range.style.left = (startYear - 2001+0.5)/23 * 100 + "%";
-        console.log((startYear - 2001) * 100 + "%");
         range.style.right = (2023 - endYear)/23 * 100 + "%";
+
+        // Update the plot in the box if a station was defined/clicked
         if (station) {
-          console.log("running?");
           updatePlot(data, station, station_name, startYear, endYear);
         }
       });
@@ -367,8 +369,7 @@ function updatePlot(data, station, name, startYear, endYear) {
   stationData.sort((a, b) => a.month_beginning - b.month_beginning);
 
     // Extract necessary information for plotting, from filtered data
-    // const months = stationData.map(d => d.month_beginning.getMonth() + 1); // 1-indexed months
-    const monthtotals = stationData.map(d => d.monthtotal);
+    const monthtotals = stationData.map(d => +d.monthtotal);
 
     const plotBox = d3.select('#plot-box');
     var rect = plotBox.node().getBoundingClientRect(); // get its computed size
@@ -380,7 +381,7 @@ function updatePlot(data, station, name, startYear, endYear) {
     const totalMonths = 12 * (endYear - startYear + 1);
   
     const xScale = d3.scaleLinear()
-      .domain([1, totalMonths]) // .domain([1, 12])
+      .domain([1, totalMonths]) // was .domain([1, 12])
       .range([0, rect.width*0.85]);
 
     const xAxis = d3.axisBottom(xScale)
@@ -391,9 +392,10 @@ function updatePlot(data, station, name, startYear, endYear) {
         return `${monthNames[monthInYear]} ${yr}`;
       });
 
-      const yScale = d3.scaleLinear()
-      .domain([0, d3.max(monthtotals)])
-      .range([rect.height - 25, 0 + 30]);
+    const yScale = d3.scaleLinear()
+    .domain([0, d3.max(monthtotals)])
+    .range([rect.height*0.87, 0 + rect.height*0.15]);
+    console.log("MAX: ", d3.max(monthtotals));
 
     // Make SVG container
     const svgPlot = plotBox.append('svg')

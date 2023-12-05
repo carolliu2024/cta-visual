@@ -45,8 +45,8 @@
 }
 
 .plot-box {
-    width: 40vw; /* Set a fixed width */
-    height: 45vh;
+    width: 40vw;
+    height: 70vh;
     position: relative;
     margin: 1vh;
     background-color: white;
@@ -103,6 +103,7 @@
     pointer-events: auto;
     -webkit-appearance: none;
   }
+
   .two-ranges input::-moz-range-thumb {
     height: 15px;
     width: 15px;
