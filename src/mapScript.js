@@ -569,16 +569,21 @@ function updatePlot(data, stations, names, startYear, endYear, aggregatedData) {
         const clickedYear = document.getElementById('year-clicked')
         clickedYear.textContent = year;
 
-        updateVisualization(aggregatedData, year, svg);
-
         let element = d3.select(this);
         // console.log("status: ",element.attr('clicked'));
         if (element.attr('clicked')=='true'){
-          return d3.select(this).attr('clicked', 'false').style('opacity', 0);
-        }
-        return d3.select(this)
+          d3.select(this).attr('clicked', 'false').style('opacity', 0);
+        } else {
+          // Reset any other clicked rectangles
+          d3.selectAll('.highlight-rect')
+                .style('opacity', 0)
+                .attr('clicked', 'false')
+          d3.select(this)
                  .style('opacity', 0.3)
                  .attr('clicked', 'true')
+        }
+
+        updateVisualization(aggregatedData, year, svg);
       });
   }
 
