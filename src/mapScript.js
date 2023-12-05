@@ -12,9 +12,7 @@ const svg = d3.select('body').append('svg')
     .attr('width', width)
     .attr('height', height);
 
-// const g = svg.append("g");
-
-// Define a projection (you can experiment with different projections)
+// Initial projection
 const projection = d3.geoMercator()
     .center([-87.6251, 41.8786]) // Adjusted center for the Chicagoland region
     .scale(proj_scale) // Zoom in on Chicagoland region
@@ -29,14 +27,13 @@ var tile = d3.tile()
 // Generate tiles
 var tiles = tile();
 
-// Assuming you have a function 'url' for generating tile URLs
+// Function for generating tile URLs
 function url(x, y, z) {
   // Return tile URL
-//   return `https://tile.openstreetmap.org/${z}/${x}/${y}.png`;
   return `https://tiles.stadiamaps.com/tiles/stamen_toner_lite/${z}/${x}/${y}.png`
 }
 
-// IMPLEMENT ZOOMING/DRAGGING
+// IMPLEMENT ZOOMING/DRAGGING (buggy) -----------------------------------------------------
 function zoomIn() {
   // handle scaling, translating
   // const [cursorX, cursorY] = d3.mouse(this);
@@ -64,6 +61,8 @@ const zoom = d3.zoom()
 
 // Apply zoom behavior to SVG container
 svg.call(zoom);
+
+// END OF ZOOMING CODE ----------------------------------------------------------
 
 // Function to update map tiles and circles
 function updateMap(newScale, newX, newY) {
@@ -135,7 +134,7 @@ d3.csv('ridership_with_locs-2.csv').then(data => {
         // updateVisualization(data, +year);
     });
 
-    // START OF DOUBLE SLIDER CODE
+    // START OF DOUBLE SLIDER CODE -------------------------------------------------------
 
     // Code for double slider
     const range = document.querySelector(".range-selected");
@@ -163,7 +162,7 @@ d3.csv('ridership_with_locs-2.csv').then(data => {
       });
 
     });
-    // END OF DOUBLE SLIDER CODE
+    // END OF DOUBLE SLIDER CODE -------------------------------------------------------
 
     // Aggregate data by station
     const aggregatedData = d3.nest()
@@ -182,8 +181,6 @@ d3.csv('ridership_with_locs-2.csv').then(data => {
         .entries(stationGroup),
     }))
     .entries(data);
-
-    // console.log("aggData: ",aggregatedData);
 
     // Find the highest yearly total, across all stations (only during that year)
     const yearlyTotalsForYear = aggregatedData
@@ -439,9 +436,6 @@ function updatePlot(data, stations, names, startYear, endYear) {
       return d.station_id == station && dataYear >= startYear && dataYear <= endYear;
     });
     stationData.sort((a, b) => a.month_beginning - b.month_beginning);
-    
-    // Extract necessary information for plotting, from filtered data
-    // const monthtotals = stationData.map(d => +d.monthtotal);
 
     // Plot the points on the graph in the box
     svgPlot.append('g')
@@ -487,88 +481,104 @@ function updatePlot(data, stations, names, startYear, endYear) {
         .style("stroke-width", "1");
   });
 
-  // // Filter data for the clicked station and selected year
-  // const stationData = data.filter(d => {
-  //   const dataYear = d.month_beginning.getFullYear();
-  //   return d.station_id == station && dataYear >= startYear && dataYear <= endYear;
+  // Title
+  svgPlot.append('text')
+  .attr('x', rect.width/2)
+  .attr('y', 20)
+  .attr('text-anchor', 'middle')
+  .style('font-size', 15)
+  .text('Monthly Ridership for ' + name);
+  
+  // X label
+  svgPlot.append('text')
+  .attr('x', rect.width/2)
+  .attr('y', rect.height)
+  .attr('text-anchor', 'middle')
+  .attr('transform', 'translate(0,' + -rect.height*.02 + ')')
+  .style('font-size', 12)
+  .text('Month');
+  
+  // Y label
+  svgPlot.append('text')
+  .attr('text-anchor', 'middle')
+  .attr('transform', 'translate('+ 0.05*rect.width + "," + rect.height/2 + ')rotate(-90)')
+  .style('font-size', 12)
+  .text('Ridership');
+
+  // Update the title in the white-box
+  const headerBoxTitle = document.getElementById('header-box').querySelector('h2');
+  headerBoxTitle.textContent = `CTA Ridership - ${name}`;
+
+  // Loop through each year and add a highlight rectangle
+  for (let year = startYear; year <= endYear; year++) {
+    // const startOfYear = xScale(12*startYear); // Jan start
+    // const endOfYear = xScale(new Date(year, 11, 31)); // Dec end
+    const startOfYear = xScale(12*(year - startYear));
+    const endOfYear = xScale(12*(year+1 - startYear));
+
+    // Add a rectangle for each year
+    svgPlot.append('rect')
+      .attr('x', startOfYear + rect.width/10)
+      .attr('width', endOfYear - startOfYear)
+      .attr('y', rect.height/10)
+      .attr('height', rect.height*0.9)
+      .attr('class', 'highlight-rect')
+      .attr('clicked', 'false')
+      .style('opacity', 0) // Initially invisible
+      .on('mouseover', function () {
+        let element = d3.select(this);
+        // element.append('text')
+        //           .attr('class', 'highlight-text')
+        //           .attr('x', (startOfYear+endOfYear)/2) // Centered horizontally
+        //           .attr('y', rect.height / 2) // Centered vertically
+        //           .attr('text-anchor', 'middle')
+        //           .attr('alignment-baseline', 'middle')
+        //           .style('font-size', 16)
+        //           .text('2021')
+        return element
+                .transition()
+                .duration(400)
+                .style('opacity', 0.3);
+               
+      })
+      .on('mouseout', function () {
+        let element = d3.select(this);
+        // If not clicked, opacity turns to 0
+        if(element.attr('clicked') == 'false'){
+          return element
+               .transition()
+               .duration(400)
+               .style('opacity', 0);
+        } else {
+          return element
+               .style('opacity', 0.3);
+        }
+
+      })
+      .on('click', function () {
+        // Invoke your function with the corresponding year
+        // yourFunction(year);
+        console.log("Highlight box: ", year);        
+        let element = d3.select(this);
+        // console.log("status: ",element.attr('clicked'));
+        if (element.attr('clicked')=='true'){
+          return d3.select(this).attr('clicked', 'false').style('opacity', 0);
+        }
+        return d3.select(this)
+                 .style('opacity', 0.3)
+                 .attr('clicked', 'true')
+      });
+  }
+
+  // // Add hover interaction to show the rectangle on hover
+  // svgPlot.on('mouseover', function () {
+  //   svgPlot.selectAll('.highlight-rect').style('opacity', 0.3);
   // });
 
-  // // Sort stationData based on month_beginning
-  // stationData.sort((a, b) => a.month_beginning - b.month_beginning);
+  // svgPlot.on('mouseout', function () {
+  //   svgPlot.selectAll('.highlight-rect').style('opacity', 0);
+  // });
 
-  //   // Extract necessary information for plotting, from filtered data
-  //   const monthtotals = stationData.map(d => +d.monthtotal);
-
-  //   // Plot the points on the graph in the box
-  //   svgPlot.append('g')
-  //     .selectAll("dot")
-  //     .data(stationData)
-  //     .enter()
-  //     .append("circle")
-  //     .attr("cx", (d) => {const m = d.month_beginning.getMonth() + 1;
-  //                         // month_in_range: e.g. month 35, 36, 37... of all the months we plot
-  //                         const month_in_range = 12*(d.month_beginning.getFullYear() - startYear) + m; 
-  //                         // console.log("Month: ",month_in_range);
-  //                         // console.log("MonthScaled: ", xScale(month_in_range));
-  //                         return xScale(month_in_range);
-  //                        } 
-  //       )
-  //     .attr("cy", (d) => {const monthTot = d.monthtotal;
-  //                         // console.log(yScale(monthTot));
-  //                         return yScale(monthTot);
-  //                        } )
-  //     .attr("transform", "translate("+rect.width/10+",0)")
-  //     .style('fill','red')
-  //     .attr("r", 2);
-
-  //   var line = d3.line()
-  //       .x(function(d) {
-  //           const m = d.month_beginning.getMonth() + 1;
-  //           const month_in_range = 12*(d.month_beginning.getFullYear() - startYear) + m;
-  //           return xScale(month_in_range);
-  //       })
-  //       .y(function(d) {
-  //           const monthTot = d.monthtotal;
-  //           return yScale(monthTot);
-  //       })
-  //       .curve(d3.curveMonotoneX);
-
-  //   svgPlot.append("path")
-  //       .datum(stationData)
-  //       .attr("class", "line")
-  //       .attr("transform", "translate(" + rect.width/10 + ",0)")
-  //       .attr("d", line)
-  //       .style("fill", "none")
-  //       .style("stroke", "#CC0000")
-  //       .style("stroke-width", "1");
-
-    // Title
-    svgPlot.append('text')
-    .attr('x', rect.width/2)
-    .attr('y', 20)
-    .attr('text-anchor', 'middle')
-    .style('font-size', 15)
-    .text('Monthly Ridership for ' + name);
-    
-    // X label
-    svgPlot.append('text')
-    .attr('x', rect.width/2)
-    .attr('y', rect.height)
-    .attr('text-anchor', 'middle')
-    .attr('transform', 'translate(0,' + -rect.height*.02 + ')')
-    .style('font-size', 12)
-    .text('Month');
-    
-    // Y label
-    svgPlot.append('text')
-    .attr('text-anchor', 'middle')
-    .attr('transform', 'translate('+ 0.05*rect.width + "," + rect.height/2 + ')rotate(-90)')
-    .style('font-size', 12)
-    .text('Ridership');
-
-    // Update the title in the white-box
-    const headerBoxTitle = document.getElementById('header-box').querySelector('h2');
-    headerBoxTitle.textContent = `CTA Ridership - ${name}`;
 }
 
 // Returns array of unique stations
