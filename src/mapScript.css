@@ -97,17 +97,26 @@
   top: -7px;
   background: none;
   pointer-events: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
+  appearance: none;
 }
+
 .two-ranges input::-webkit-slider-thumb {
+  height: 20px;
+  width: 20px;
+  border-radius: 50%;
+  border: 3px solid #2967e2;
+  background-color: #fff;
+  pointer-events: auto;
+  appearance: none;
+}
+/* .two-ranges input::-webkit-slider-thumb {
   height: 20px;
   width: 20px;
   border-radius: 50%;
   border: 3px solid #1b53c0;
   background-color: #fff;
   pointer-events: auto;
-  -webkit-appearance: none;
+  appearance: none;
 }
 
 .two-ranges input::-moz-range-thumb {
@@ -117,5 +126,5 @@
   border: 3px solid #1b53c0;
   background-color: #fff;
   pointer-events: auto;
-  -moz-appearance: none;
-}
+  appearance: none;
+} */
