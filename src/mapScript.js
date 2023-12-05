@@ -6,6 +6,8 @@ const height = window.innerHeight;
 var proj_scale = 800000;
 var projX = width/2;
 var projY = height/2;
+var yearToDisplay = 2023;
+// var clickedYear;
 
 // Create an SVG container
 const svg = d3.select('body').append('svg')
@@ -116,6 +118,7 @@ d3.csv('ridership_with_locs-2.csv').then(data => {
     // Add event listener for the slider
     const slider = document.getElementById('year-slider');
     const selectedYear = document.getElementById('selected-year');
+    const clickedYear = document.getElementById('year-clicked')
     var year = 2023;
     var startYear = 2022;
     var endYear = 2023;
@@ -133,36 +136,6 @@ d3.csv('ridership_with_locs-2.csv').then(data => {
         selectedYear.textContent = year;
         // updateVisualization(data, +year);
     });
-
-    // START OF DOUBLE SLIDER CODE -------------------------------------------------------
-
-    // Code for double slider
-    const range = document.querySelector(".range-selected");
-    // const range = document.getElementById("range-selected");
-    const rangeInput = document.querySelectorAll(".two-ranges input"); // Get both ranges
-    const min = document.getElementById("selected-min");
-    const max = document.getElementById("selected-max");
-
-    rangeInput.forEach((input) => {
-      input.addEventListener("input", (e) => {
-        startYear = parseInt(rangeInput[0].value);
-        endYear = parseInt(rangeInput[1].value);
-
-        min.textContent = startYear;
-        max.textContent = endYear;
-
-        // Everything between the sliders is filled blue
-        range.style.left = (startYear - 2001+0.5)/23 * 100 + "%";
-        range.style.right = (2023 - endYear)/23 * 100 + "%";
-
-        // Update the plot in the box if a station was defined/clicked
-        if (stations) {
-          updatePlot(data, stations, station_names, startYear, endYear);
-        }
-      });
-
-    });
-    // END OF DOUBLE SLIDER CODE -------------------------------------------------------
 
     // Aggregate data by station
     const aggregatedData = d3.nest()
@@ -264,11 +237,41 @@ d3.csv('ridership_with_locs-2.csv').then(data => {
           station_names.push(event.value.station_name);
 
           // Call a function to update the plot based on the clicked station
-          updatePlot(data, stations, station_names, startYear, endYear);
+          updatePlot(data, stations, station_names, startYear, endYear, aggregatedData);
 
           // Create colored line tags
           createLineTags(data, stations[stations.length-1]); // NEEDS UPDATING
         });
+
+
+    // START OF DOUBLE SLIDER CODE -------------------------------------------------------
+    const range = document.querySelector(".range-selected");
+    // const range = document.getElementById("range-selected");
+    const rangeInput = document.querySelectorAll(".two-ranges input"); // Get both ranges
+    const min = document.getElementById("selected-min");
+    const max = document.getElementById("selected-max");
+
+    rangeInput.forEach((input) => {
+      input.addEventListener("input", (e) => {
+        startYear = parseInt(rangeInput[0].value);
+        endYear = parseInt(rangeInput[1].value);
+
+        min.textContent = startYear;
+        max.textContent = endYear;
+
+        // Everything between the sliders is filled blue
+        range.style.left = (startYear - 2001+0.5)/23 * 100 + "%";
+        range.style.right = (2023 - endYear)/23 * 100 + "%";
+
+        // Update the plot in the box if a station was defined/clicked
+        if (stations) {
+          updatePlot(data, stations, station_names, startYear, endYear, aggregatedData);
+        }
+      });
+
+    });
+    // END OF DOUBLE SLIDER CODE -------------------------------------------------------
+
 
     // Update the year displayed by slider
     slider.addEventListener('input', function () {
@@ -320,7 +323,7 @@ function updateVisualization(aggregatedData, year, svg) {
               .style('stroke', 'black')
                         .style('stroke-width', 1)
               .style('fill', d => {
-                const linesForYear = getUniqueLines(data, d.value.station_id)
+                const linesForYear = getUniqueLines(data, d.value.station_id) //data --> aggregatedData?
                     .map(line => getBackgroundColor(line));
             
                 // Generate a unique ID for the gradient
@@ -356,7 +359,7 @@ function updateVisualization(aggregatedData, year, svg) {
 }
 
 // function to update plot
-function updatePlot(data, stations, names, startYear, endYear) {
+function updatePlot(data, stations, names, startYear, endYear, aggregatedData) {
 
   // Want to display multiple years' worth of month data
   const plotBox = d3.select('#plot-box');
@@ -556,9 +559,18 @@ function updatePlot(data, stations, names, startYear, endYear) {
 
       })
       .on('click', function () {
-        // Invoke your function with the corresponding year
-        // yourFunction(year);
-        console.log("Highlight box: ", year);        
+        console.log("Highlight box: ", year);
+        
+        // svg.append('text')
+        //     .attr("x", rect.width/2)
+        //     .attr("y", rect.height/2)
+        //     .attr("font-size", 16)
+        //     .text("YEAR CLICKED ON PLOT: " + year);
+        const clickedYear = document.getElementById('year-clicked')
+        clickedYear.textContent = year;
+
+        updateVisualization(aggregatedData, year, svg);
+
         let element = d3.select(this);
         // console.log("status: ",element.attr('clicked'));
         if (element.attr('clicked')=='true'){
@@ -570,19 +582,26 @@ function updatePlot(data, stations, names, startYear, endYear) {
       });
   }
 
-  // // Add hover interaction to show the rectangle on hover
-  // svgPlot.on('mouseover', function () {
-  //   svgPlot.selectAll('.highlight-rect').style('opacity', 0.3);
-  // });
-
-  // svgPlot.on('mouseout', function () {
-  //   svgPlot.selectAll('.highlight-rect').style('opacity', 0);
-  // });
-
 }
+
+// function yearClicked(aggregatedData, year){
+//   // Update the size/circle encoding on the main map
+//   // Find the highest yearly total, across all stations (only during that year)
+//   const yearlyTotalsForYear = aggregatedData
+//   .map(station => ({
+//     yearlyTotal: station.value.years.find(yr => yr.key == year)?.value.yearlyTotal || 0,
+//   }));
+// const highestYearlyTotal = d3.max(yearlyTotalsForYear, d => d.yearlyTotal);
+
+// // Scale for circle size based on total ridership
+// const sizeScale = d3.scaleSqrt()
+// .domain([0, highestYearlyTotal])
+// .range([2, 10]); // Adjust the range for desired circle sizes
+// }
 
 // Returns array of unique stations
 function getUniqueLines(data, station) {
+  // console.log("getUniqueLines station_id: ",station_id);
   // Find the row corresponding to the selected station
   const stationInfo = data.find(d => d.station_id.toString() === station.toString());
 

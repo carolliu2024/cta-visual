@@ -9,6 +9,15 @@
     z-index: 1;
 }
 
+.year-clicked {
+  position: fixed;
+  top: 5vh;
+  left: 5vw;
+  z-index: 1;
+  font-weight: bold;
+  font-size: 1.25em;
+}
+
 .header-box {
     height: auto;
     width: 35vw; /* Adjust the width as needed */
