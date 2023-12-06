@@ -631,11 +631,7 @@ function updatePlot(data, stations, names, startYear, endYear, aggregatedData) {
   // Y label
   svgPlot.append('text')
   .attr('text-anchor', 'middle')
-<<<<<<< Updated upstream
-  .attr('transform', 'translate('+ 0.024*rect.width + "," + rect.height/2 + ')rotate(-90)')
-=======
   .attr('transform', 'translate('+ 0.015*rect.width + "," + rect.height/2 + ')rotate(-90)')
->>>>>>> Stashed changes
   .style('font-size', 12)
   .text('Ridership');
 
