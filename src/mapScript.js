@@ -133,7 +133,7 @@ d3.csv('ridership_with_locs-2.csv').then(data => {
     const selectedYear = document.getElementById('selected-year');
     // const clickedYear = document.getElementById('year-clicked')
     var year = 2023;
-    var startYear = 2022;
+    var startYear = 2017;
     var endYear = 2023;
     var stations = [];
     var station_names = [];
@@ -552,7 +552,7 @@ function updatePlot(data, stations, names, startYear, endYear, aggregatedData) {
     const legend = svgPlot.append('g')
       .attr('class', 'legend')
       .attr('id', station)
-      .attr('transform', `translate(${rect.width*0.7},${rect.height/20 + index * 20})`)
+      .attr('transform', `translate(${rect.width*0.7},${rect.height/50 + index * 20})`)
       .on('mouseover', function () {
         // .on("mouseover", (event, d) => {
         //   onHover.html(`Station: ${event.value.station_name} <br>`)
@@ -651,8 +651,8 @@ function updatePlot(data, stations, names, startYear, endYear, aggregatedData) {
     svgPlot.append('rect')
       .attr('x', startOfYear + rect.width/10)
       .attr('width', endOfYear - startOfYear)
-      .attr('y', rect.height/10)
-      .attr('height', rect.height*0.9)
+      .attr('y', rect.height/8)
+      .attr('height', rect.height*0.75)
       .attr('class', 'highlight-rect')
       .attr('clicked', 'false')
       .style('opacity', 0) // Initially invisible

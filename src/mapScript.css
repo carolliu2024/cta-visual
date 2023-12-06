@@ -91,7 +91,7 @@
   
 .range-selected {
     height: 100%;
-    left: 93.5%;
+    left: 71.7%;
     right: 0%;
     position: absolute;
     border-radius: 5px;
@@ -124,6 +124,13 @@
 
 .legend {
   z-index: 2;
+}
+
+.highlight-rect{
+  z-index:1;
+}
+.rect{
+  z-index:1;
 }
 
 .tooltip #text{
