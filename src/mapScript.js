@@ -26,8 +26,8 @@ const svg = d3.select('body').append('svg')
     .attr('height', height);
 
 // Initial projection
-const projection = d3.geoMercator()
-    .center([-87.6251, 41.8786]) // Adjusted center for the Chicagoland region
+const projection = d3.geoMercator()  
+    .center([-87.610073, 41.880857]) // Adjusted center for the Chicagoland region
     .scale(proj_scale) // Zoom in on Chicagoland region
     .translate([projX, projY]);
 
@@ -58,8 +58,8 @@ function zoomIn() {
   var newScale = proj_scale*newTransform.k;
   // const newCenter = projection.invert([cursorX, cursorY]);
 
-  projection
-    .center([-87.6298, 41.8781]) // Adjusted center for the Chicagoland region
+  projection // 41.880857, -87.610073
+    .center([-87.610073, 41.880857]) // Adjusted center for the Chicagoland region
     .scale(newScale) // Zoom in on Chicagoland region
     .translate([projX + newTransform.x, projY + newTransform.y]);
 
@@ -283,6 +283,7 @@ d3.csv('ridership_with_locs-2.csv').then(data => {
                  .style("left", cursor[0] + "px") // d.geometry.coordinates[0]
                  .style("top", cursor[1] + "px")
                  .attr("class", "tooltip")
+                 .style("z-index", 8)
                  .style("visibility", "visible");
 
           createLineTagsTooltip(data, event.key, onHover);
@@ -548,11 +549,12 @@ function updatePlot(data, stations, names, startYear, endYear, aggregatedData) {
         .style("stroke", newColor)
         .style("stroke-width", "1");
 
-    // Add a legend for each station
+
     const legend = svgPlot.append('g')
       .attr('class', 'legend')
       .attr('id', station)
       .attr('transform', `translate(${rect.width*0.7},${rect.height/50 + index * 20})`)
+      .style('z-index', '5')
       .on('mouseover', function () {
         // .on("mouseover", (event, d) => {
         //   onHover.html(`Station: ${event.value.station_name} <br>`)
@@ -629,7 +631,11 @@ function updatePlot(data, stations, names, startYear, endYear, aggregatedData) {
   // Y label
   svgPlot.append('text')
   .attr('text-anchor', 'middle')
+<<<<<<< Updated upstream
   .attr('transform', 'translate('+ 0.024*rect.width + "," + rect.height/2 + ')rotate(-90)')
+=======
+  .attr('transform', 'translate('+ 0.015*rect.width + "," + rect.height/2 + ')rotate(-90)')
+>>>>>>> Stashed changes
   .style('font-size', 12)
   .text('Ridership');
 
@@ -653,6 +659,7 @@ function updatePlot(data, stations, names, startYear, endYear, aggregatedData) {
       .attr('width', endOfYear - startOfYear)
       .attr('y', rect.height/8)
       .attr('height', rect.height*0.75)
+      .style('z-index', '3')
       .attr('class', 'highlight-rect')
       .attr('clicked', 'false')
       .style('opacity', 0) // Initially invisible
@@ -745,6 +752,7 @@ function createLineTags(data, station) {
   tags.enter().append('span').attr('class', 'tag').text(d => getTrainName(d))
       .style('background-color', d => getBackgroundColor(d)) // Apply background color based on line name
       .style('color', 'white')
+      .style('z-index', '8')
       .style('border-radius', '5px')
       .style('padding', '5px')
       .style('margin-right', '5px');
@@ -762,6 +770,7 @@ function createLineTagsTooltip(data, station) {
   // Append <span> elements for each line
   const tags = onHover.selectAll('.tag').data(lines);
   tags.enter().append('span').attr('class', 'tag').text(d => getTrainName(d))
+      
       .style('background-color', d => getBackgroundColor(d)) // Apply background color based on line name
       .style('color', 'white')
       .style('border-radius', '5px')

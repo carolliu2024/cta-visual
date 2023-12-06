@@ -11,7 +11,7 @@
 
 .year-clicked {
   background-color: rgba(255, 255, 255, 0.8);
-  padding: 0.75vw;
+  padding: 0.5vw;
   border-radius: 5px;
   border-color: grey;
   border-style: solid;
@@ -21,12 +21,11 @@
   left: 5vw;
   z-index: 1;
   font-weight: bold;
-  font-size: 1.25em;
 }
 
 .header-box {
     height: auto;
-    width: 35vw; /* Adjust the width as needed */
+    width: 40vw; /* Adjust the width as needed */
     background-color: rgba(255, 255, 255, 0.8); /* White with 0.7 opacity */
     justify-content: flex-start;
     border-radius: 5px;
@@ -34,18 +33,23 @@
     border-style: solid;
     border-width: 1px;
     margin: 1vh;
+    margin-bottom: 0.25vh;
     padding: 0 1vw 1vw 1vw;
     display: flex;
     flex-direction: column;
 }
 
+.header-box p{
+  margin: 0px;
+}
+
 .body-box {
-    width: 35vw;
+    width: 40vw;
     height: 70vh;
     margin: 1vh;
     padding: 0 1vw 0 1vw;
     border-radius: 5px;
-    background-color: rgba(255, 255, 255, 0.8);
+    background-color: rgba(255, 255, 255);
     border-color: grey;
     border-style: solid;
     border-width: 1px;
@@ -85,7 +89,7 @@
 .range-slider {
     height: 5px;
     position: relative;
-    background-color: #e1e9f6;
+    background-color: #b9d0f4;
     border-radius: 2px;
   }
   
@@ -127,15 +131,17 @@
 }
 
 .highlight-rect{
-  z-index:1;
+  z-index: 1;
 }
+
 .rect{
   z-index:1;
+  
 }
 
 .tooltip #text{
   margin: 2px;
-  z-index: 3;
+  z-index: 10;
 }
 /* When we hover over a legend, make all stations on the map EXCEPT the one we're hovering on, have lower opacity. */
 /* .legend {

@@ -17,10 +17,17 @@
     <!-- Your map will go here -->
     <script src="mapScript.js"></script>
     <div class="year-clicked">
-        Map displays total ridership at each station in this year: 
-        <span id="year-clicked">2023</span>
-        (Click an available year on the plot!)
+        <h2>
+            <span id="year-clicked">2023</span>
+            Station Ridership Overview
+        </h2>
+        <p>
+            Click on a station to get started. <br>
+            Hover over the plot to see annual ridership by year.
+        </p>
+        
     </div>
+    
     <div class="box-container">
         <!-- <label for="year-slider">
             Select Year:
@@ -53,14 +60,14 @@
             </div>
             
 
-            
         </div> 
 
         <!-- SVG for plot goes in here -->
         <div class="header-box" id="header-box">
             <h2>CTA Ridership</h2>
+
             <div class="tags-container"></div>
-            
+    
         </div> 
         <div class="body-box" id="body-box"> 
             <div class="plot-box" id="plot-box"> </div>
