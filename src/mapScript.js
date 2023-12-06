@@ -8,7 +8,17 @@ var projX = width/2;
 var projY = height/2;
 var yearToDisplay = 2023;
 var aggData;
-// var clickedYear;
+var onHover = d3.select('body').append('div')   
+                    .style("height", 3+"em")
+                    .style("position", "absolute")
+                    .style("background-color", "whitesmoke")
+                    .style("opacity", 0.9)
+                    .style("border-color", "black")
+                    .style("border-style", "solid")
+                    .style("border-width", 1+"px")
+                    .style("padding", 0.5+"em")
+                    .style("visibility", "hidden");
+var cursor = []; // Cursor coords at any time
 
 // Create an SVG container
 const svg = d3.select('body').append('svg')
@@ -121,7 +131,7 @@ d3.csv('ridership_with_locs-2.csv').then(data => {
     // Add event listener for the slider
     const slider = document.getElementById('year-slider');
     const selectedYear = document.getElementById('selected-year');
-    const clickedYear = document.getElementById('year-clicked')
+    // const clickedYear = document.getElementById('year-clicked')
     var year = 2023;
     var startYear = 2022;
     var endYear = 2023;
@@ -135,11 +145,11 @@ d3.csv('ridership_with_locs-2.csv').then(data => {
     });
 
     // Update the year displayed by slider
-    slider.addEventListener('input', function() {
-        year = this.value;
-        selectedYear.textContent = year;
-        // updateVisualization(data, +year);
-    });
+    // slider.addEventListener('input', function() {
+    //     year = this.value;
+    //     selectedYear.textContent = year;
+    //     // updateVisualization(data, +year);
+    // });
 
     // Aggregate data by station
     const aggregatedData = d3.nest()
@@ -187,6 +197,13 @@ d3.csv('ridership_with_locs-2.csv').then(data => {
     document.body.appendChild(svg.node());
 
     const defs = svg.append('defs');
+
+    
+    document.addEventListener('mousemove', function(event) {
+      // Get the cursor coordinates
+      cursor = [event.pageX, event.pageY];
+    });
+
     // Map the aggregated data to the stations on the map
     svg.selectAll('circle')
         .data(aggregatedData)
@@ -260,6 +277,20 @@ d3.csv('ridership_with_locs-2.csv').then(data => {
 
           // Create colored line tags
           createLineTags(data, stations[stations.length-1]); // NEEDS UPDATING
+        })
+        .on("mouseover", (event, d) => {
+          onHover.html(`Station: ${event.value.station_name} <br>`)
+                 .style("left", cursor[0] + "px") // d.geometry.coordinates[0]
+                 .style("top", cursor[1] + "px")
+                 .attr("class", "tooltip")
+                 .style("visibility", "visible");
+
+          createLineTagsTooltip(data, event.key, onHover);
+        })
+        .on("mouseout", function (event, d) {
+          // Hide tooltip
+          d3.select(".tooltip")
+            .style("visibility", "hidden");
         });
 
 
@@ -292,9 +323,9 @@ d3.csv('ridership_with_locs-2.csv').then(data => {
     // END OF DOUBLE SLIDER CODE -------------------------------------------------------
 
     // Update the year displayed by slider
-    slider.addEventListener('input', function () {
-      updateVisualization(aggregatedData, +year, svg);
-    });
+    // slider.addEventListener('input', function () {
+    //   updateVisualization(aggregatedData, +year, svg);
+    // });
 
     // Update plot inside whenever box is resized --------------------------------------
     // resizeable element
@@ -310,27 +341,6 @@ d3.csv('ridership_with_locs-2.csv').then(data => {
 
     resizeObserver.observe(bodyBox);
     // END resizing box update ---------------------------------------------------------
-
-    // document.querySelectorAll('.legend').forEach(legendItem => {
-    //   legendItem.addEventListener('mouseover', function () {
-    //     const stationId = this.getAttribute('id');
-    //     console.log(stationId);
-    
-    //     document.querySelectorAll('circle').forEach(mapStation => {
-    //       console.log("circle station_id: ", mapStation.getAttribute('station_id'));
-    //       console.log("legend id: ", stationId);
-    //       if (mapStation.getAttribute('station_id') !== stationId) {
-    //         mapStation.classList.add('dimmed');
-    //       }
-    //     });
-    //   });
-    
-    //   legendItem.addEventListener('mouseout', function () {
-    //     document.querySelectorAll('.circle').forEach(mapStation => {
-    //       mapStation.classList.remove('dimmed');
-    //     });
-    //   });
-    // });
 
 });
 
@@ -506,8 +516,6 @@ function updatePlot(data, stations, names, startYear, endYear, aggregatedData) {
       .attr("cx", (d) => {const m = d.month_beginning.getMonth() + 1;
                           // month_in_range: e.g. month 35, 36, 37... of all the months we plot
                           const month_in_range = 12*(d.month_beginning.getFullYear() - startYear) + m; 
-                          // console.log("Month: ",month_in_range);
-                          // console.log("MonthScaled: ", xScale(month_in_range));
                           return xScale(month_in_range);
                          } 
         )
@@ -544,27 +552,47 @@ function updatePlot(data, stations, names, startYear, endYear, aggregatedData) {
     const legend = svgPlot.append('g')
       .attr('class', 'legend')
       .attr('id', station)
-      .attr('transform', `translate(${rect.width*0.7},${30 + index * 20})`)
+      .attr('transform', `translate(${rect.width*0.7},${rect.height/20 + index * 20})`)
       .on('mouseover', function () {
-        // svg.selectAll('circle')
+        // .on("mouseover", (event, d) => {
+        //   onHover.html(`Station: ${event.value.station_name} <br>`)
+        //          .style("left", cursor[0] + "px") // d.geometry.coordinates[0]
+        //          .style("top", cursor[1] + "px")
+        //          .attr("class", "tooltip")
+        //          .style("visibility", "visible");
+
+        //   createLineTagsTooltip(data, event.key, onHover);
+        // })
+        // .on("mouseout", function (event, d) {
+        //   // Hide tooltip
+        //   d3.select(".tooltip")
+        //     .style("visibility", "hidden");
+        // });
+        let stationOnMap = svg.select(`[station_id="${station}"]`);
           
-        svg.select(`[station_id="${station}"]`)
+        // svg.select(`[station_id="${station}"]`)
+        stationOnMap
             .style('stroke', 'black')
             .style('stroke-width', '6px')
+            
+        onHover.html(`Station: ${names[index]} <br>`)
+                .attr('cx',stationOnMap.attr('cx'))
+                .attr('cy',stationOnMap.attr('cy'))
+                // .style("left", cursor[0] + "px") // d.geometry.coordinates[0]
+                // .style("top", cursor[1] + "px")
+                .attr("class", "tooltip")
+                .style("visibility", "visible");
+        createLineTagsTooltip(data, station, onHover);
         // .attr('stop-opacity', 1);
 
       })
       .on('mouseout', function () {
-        // svg.selectAll('circle')
-          // .style('stroke-width', 2) // Set the stroke width
-          // // .attr('r', 5)
-          // // .attr('stop-opacity', 0.1);
           
         svg.select(`[station_id="${station}"]`)
           .style('stroke-width', '1px')
-            
-          // .attr();
-        // .attr('stop-opacity', 1);
+
+        d3.select(".tooltip")
+           .style("visibility", "hidden");
 
       });
 
@@ -587,7 +615,7 @@ function updatePlot(data, stations, names, startYear, endYear, aggregatedData) {
   .attr('y', 20)
   .attr('text-anchor', 'middle')
   .style('font-size', 15)
-  .text('Monthly Ridership for ' + name);
+  .text('Monthly Ridership for Stations');
   
   // X label
   svgPlot.append('text')
@@ -605,6 +633,9 @@ function updatePlot(data, stations, names, startYear, endYear, aggregatedData) {
   .style('font-size', 12)
   .text('Ridership');
 
+  if (!name){
+    name = "Display your most recently-clicked station here!"
+  }
   // Update the title in the white-box
   const headerBoxTitle = document.getElementById('header-box').querySelector('h2');
   headerBoxTitle.textContent = `CTA Ridership - ${name}`;
@@ -627,14 +658,6 @@ function updatePlot(data, stations, names, startYear, endYear, aggregatedData) {
       .style('opacity', 0) // Initially invisible
       .on('mouseover', function () {
         let element = d3.select(this);
-        // element.append('text')
-        //           .attr('class', 'highlight-text')
-        //           .attr('x', (startOfYear+endOfYear)/2) // Centered horizontally
-        //           .attr('y', rect.height / 2) // Centered vertically
-        //           .attr('text-anchor', 'middle')
-        //           .attr('alignment-baseline', 'middle')
-        //           .style('font-size', 16)
-        //           .text('2021')
         return element
                 .transition()
                 .duration(400)
@@ -656,13 +679,6 @@ function updatePlot(data, stations, names, startYear, endYear, aggregatedData) {
 
       })
       .on('click', function () {
-        // console.log("Highlight box: ", year);
-        
-        // svg.append('text')
-        //     .attr("x", rect.width/2)
-        //     .attr("y", rect.height/2)
-        //     .attr("font-size", 16)
-        //     .text("YEAR CLICKED ON PLOT: " + year);
         const clickedYear = document.getElementById('year-clicked')
         clickedYear.textContent = year;
 
@@ -732,6 +748,25 @@ function createLineTags(data, station) {
       .style('border-radius', '5px')
       .style('padding', '5px')
       .style('margin-right', '5px');
+}
+
+function createLineTagsTooltip(data, station) {
+  console.log("Running");
+  // Convert the Set back to an array
+  const lines = getUniqueLines(data, station);
+  console.log("lines: ", lines);
+
+  // Clear existing tags
+  onHover.selectAll('.tag').remove();
+
+  // Append <span> elements for each line
+  const tags = onHover.selectAll('.tag').data(lines);
+  tags.enter().append('span').attr('class', 'tag').text(d => getTrainName(d))
+      .style('background-color', d => getBackgroundColor(d)) // Apply background color based on line name
+      .style('color', 'white')
+      .style('border-radius', '5px')
+      .style('padding', '5px')
+      .style('margin', '5px');
 }
 
 // Function to get background color based on line name

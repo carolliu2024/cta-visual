@@ -122,6 +122,14 @@
   appearance: none;
 }
 
+.legend {
+  z-index: 2;
+}
+
+.tooltip #text{
+  margin: 2px;
+  z-index: 3;
+}
 /* When we hover over a legend, make all stations on the map EXCEPT the one we're hovering on, have lower opacity. */
 /* .legend {
   cursor: pointer;
