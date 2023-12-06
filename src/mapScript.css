@@ -39,10 +39,6 @@
     flex-direction: column;
 }
 
-/* [draggable=true] {
-    cursor: move;
-} */
-
 .body-box {
     width: 35vw;
     height: 70vh;
@@ -125,3 +121,20 @@
   pointer-events: auto;
   appearance: none;
 }
+
+/* When we hover over a legend, make all stations on the map EXCEPT the one we're hovering on, have lower opacity. */
+/* .legend {
+  cursor: pointer;
+}
+
+.legend:hover {
+  opacity: 0.7;
+}
+
+circle {
+  transition: opacity 0.3s ease;
+}
+
+circle.dimmed {
+  opacity: 0.3
+} */

@@ -191,6 +191,7 @@ d3.csv('ridership_with_locs-2.csv').then(data => {
     svg.selectAll('circle')
         .data(aggregatedData)
         .enter().append('circle')
+        .attr("station_id", d=>d.value.station_id) // Add station ids so they're more easily identifiable when hovering over legend
         .attr("class", "circle")
         .attr('cx', d => projection([d.value.longitude, d.value.latitude])[0])
         .attr('cy', d => projection([d.value.longitude, d.value.latitude])[1])
@@ -309,6 +310,27 @@ d3.csv('ridership_with_locs-2.csv').then(data => {
 
     resizeObserver.observe(bodyBox);
     // END resizing box update ---------------------------------------------------------
+
+    // document.querySelectorAll('.legend').forEach(legendItem => {
+    //   legendItem.addEventListener('mouseover', function () {
+    //     const stationId = this.getAttribute('id');
+    //     console.log(stationId);
+    
+    //     document.querySelectorAll('circle').forEach(mapStation => {
+    //       console.log("circle station_id: ", mapStation.getAttribute('station_id'));
+    //       console.log("legend id: ", stationId);
+    //       if (mapStation.getAttribute('station_id') !== stationId) {
+    //         mapStation.classList.add('dimmed');
+    //       }
+    //     });
+    //   });
+    
+    //   legendItem.addEventListener('mouseout', function () {
+    //     document.querySelectorAll('.circle').forEach(mapStation => {
+    //       mapStation.classList.remove('dimmed');
+    //     });
+    //   });
+    // });
 
 });
 
@@ -521,7 +543,30 @@ function updatePlot(data, stations, names, startYear, endYear, aggregatedData) {
     // Add a legend for each station
     const legend = svgPlot.append('g')
       .attr('class', 'legend')
-      .attr('transform', `translate(${rect.width*0.7},${30 + index * 20})`);
+      .attr('id', station)
+      .attr('transform', `translate(${rect.width*0.7},${30 + index * 20})`)
+      .on('mouseover', function () {
+        // svg.selectAll('circle')
+          
+        svg.select(`[station_id="${station}"]`)
+            .style('stroke', 'black')
+            .style('stroke-width', '6px')
+        // .attr('stop-opacity', 1);
+
+      })
+      .on('mouseout', function () {
+        // svg.selectAll('circle')
+          // .style('stroke-width', 2) // Set the stroke width
+          // // .attr('r', 5)
+          // // .attr('stop-opacity', 0.1);
+          
+        svg.select(`[station_id="${station}"]`)
+          .style('stroke-width', '1px')
+            
+          // .attr();
+        // .attr('stop-opacity', 1);
+
+      });
 
     legend.append('rect')
       .attr('width', 15)
