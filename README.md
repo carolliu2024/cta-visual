@@ -1,6 +1,10 @@
 # Visualizing CTA Ridership Throughout the Years
-CS333: Interactive Data Visualization Final Assignment
+CS333: Interactive Data Visualization Final Assignment  
 _Carol Liu & Kelly Mei_
+
+## Technology
+
+HTML/CSS | D3.js
 
 ## Motivation
 CTA ridership has been a prominent topic of discourse within various local forums in the city of Chicago. The heightened scrutiny became especially evident during the 2023 mayoral election, where improvement of the CTA emerged as a pivotal issue. Moreover, the discernable shifts in CTA service quality in recent years following the COVID-19 pandemic, marked by rising concerns about CTA-related crime and drop in service accuracy (e.g. ghost buses, delays, etc.). As native Chicagoans, we wanted to create a visualization that would allow users to easily observe trends in ridership through the years.
@@ -11,6 +15,4 @@ We ended up merging several CTA datasets with information about station location
 
 For reference, the dataset link is located [here] (https://data.cityofchicago.org/Transportation/CTA-Ridership-L-Station-Entries-Monthly-Day-Type-A/t2rn-p8d7/about_data).
 
-## Technology
 
-HTML/CSS | D3.js
