@@ -1,5 +1,4 @@
-# Visualizing CTA Ridership Throughout the Years
-## CS333: Interactive Data Visualization Final Assignment  
+# Visualizing CTA Ridership Throughout the Years  
 _Carol Liu & Kelly Mei_
 
 ## Technology
